@@ -16,7 +16,7 @@ class BinaryReader {
   /**
    * Reads a single byte value.
    */
-  readByte() {
+  int readByte() {
     return this.read(length: 1)[0];
   }
 
@@ -24,7 +24,7 @@ class BinaryReader {
    * Reads an integer (4 bytes or 32 bits) value.
    * @param signed {Boolean}
    */
-  int readInt({signed: true}) {
+  int readInt({bool signed: true}) {
     final res = readBigIntFromBuffer(
         this.stream.sublist(this.offset, this.offset + 4), signed: signed);
     this.offset += 4;
@@ -36,25 +36,8 @@ class BinaryReader {
    * @param signed
    * @returns {BigInteger}
    */
-  readLong(signed) {
+  BigInt readLong({bool signed :true}) {
     return this.readLargeInt(64, signed);
-  }
-
-  /**
-   * Reads a real floating point (4 bytes) value.
-   * @returns {number}
-   */
-  readFloat() {
-    return this.read(length: 4).readFloatLE(0);
-  }
-
-  /**
-   * Reads a real floating point (8 bytes) value.
-   * @returns {BigInteger}
-   */
-  readDouble() {
-    // was this a bug ? it should have been <d
-    return this.read(length: 8).readDoubleLE(0);
   }
 
   /**
@@ -71,7 +54,7 @@ class BinaryReader {
    * Read the given amount of bytes, or -1 to read all remaining.
    * @param length {number}
    */
-  read({length:-1}) {
+  List<int> read({length:-1}) {
     if (length == -1) {
       length = this.stream.length - this.offset;
     }
@@ -161,7 +144,7 @@ class BinaryReader {
   /**
    * Reads a Telegram object.
    */
-  tgReadObject() {
+  dynamic tgReadObject() {
     final finalConstructorId = this.readInt(signed: false);
     var clazz = tlobjects[finalConstructorId];
     if (clazz == null) {
@@ -204,14 +187,14 @@ class BinaryReader {
    * Reads a vector (a list) of Telegram objects.
    * @returns {[Buffer]}
    */
-  tgReadVector() {
+  List<dynamic> tgReadVector() {
     if (this.readInt(signed: false) != 0x1cb5c415) {
-      throw('Invalid finalructor code, vector was expected');
+      throw('Invalid constructor code, vector was expected');
     }
     final count = this.readInt();
     final temp = [];
     for (var i = 0; i < count; i++) {
-      temp.add(this.tgReadObject())
+      temp.add(this.tgReadObject());
     }
     return temp;
   }
@@ -221,7 +204,7 @@ class BinaryReader {
   /**
    * Closes the reader.
    */
-  close() {
+  void close() {
     this.stream.clear();
   }
 
@@ -231,7 +214,7 @@ class BinaryReader {
    * Tells the current position on the stream.
    * @returns {number}
    */
-  tellPosition() {
+  int tellPosition() {
     return this.offset;
   }
 
@@ -239,7 +222,7 @@ class BinaryReader {
    * Sets the current position on the stream.
    * @param position
    */
-  setPosition(position) {
+  void setPosition(position) {
     this.offset = position;
   }
 
@@ -248,7 +231,7 @@ class BinaryReader {
    * The offset may be negative.
    * @param offset
    */
-  seek(offset) {
+  void seek(offset) {
     this.offset += offset;
   }
 

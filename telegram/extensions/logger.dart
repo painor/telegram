@@ -12,7 +12,7 @@ class Logger {
   };
   final String messageFormat = '[%t] [%l] - [%m]';
 
-  Logger({level: 'error'}) {
+  Logger({ String level: 'error'}) {
     if (_level==null) {
       _level = 'debug';
     }
@@ -23,39 +23,39 @@ class Logger {
    * @param level {string}
    * @returns {boolean}
    */
-  canSend(level) {
+  bool canSend(String level) {
     return (Logger.levels.indexOf(_level) >= Logger.levels.indexOf(level));
   }
 
   /**
    * @param message {string}
    */
-  warn(message) {
+  void warn(String message) {
     this._log('warn', message, this.colors['warn']);
   }
 
   /**
    * @param message {string}
    */
-  info(message) {
+  void info(String message) {
     this._log('info', message, this.colors['info']);
   }
 
   /**
    * @param message {string}
    */
-  debug(message) {
+  void debug(String message) {
     this._log('debug', message, this.colors['debug']);
   }
 
   /**
    * @param message {string}
    */
-  error(message) {
+  void error(String message) {
     this._log('error', message, this.colors['error']);
   }
 
-  format(message, level) {
+  String format(String message, String level) {
     return this
         .messageFormat
         .replaceFirst('%t', new DateTime.now().toIso8601String())
@@ -63,7 +63,7 @@ class Logger {
         .replaceFirst('%m', message);
   }
 
-  static setLevel(level) {
+  static void setLevel(String level) {
     _level = level;
   }
 
@@ -72,7 +72,7 @@ class Logger {
    * @param message {string}
    * @param color {string}
    */
-  _log(level, message, color) {
+  void _log(String level,String message,String color) {
     if (_level==null) {
       return;
     }

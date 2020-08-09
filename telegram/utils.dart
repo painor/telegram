@@ -1,5 +1,8 @@
+import 'dart:convert';
 import 'dart:core';
+import 'dart:math';
 import 'package:convert/convert.dart';
+import 'package:crclib/crclib.dart';
 
 BigInt readBigIntFromBuffer(List<int> buffer, {little: true, signed: false}) {
   final bytesNumber = buffer.length;
@@ -64,10 +67,51 @@ List<int> readBufferFromBigInt(bigInt, int bytesNumber,
   return buffer;
 }
 
+List<int> generateRandomBytes(int count) {
+  Random random = Random.secure();
+
+  return List<int>.generate(count, (i) => random.nextInt(256));
+}
+
+BigInt generateRandomLong({signed: true}) {
+  return readBigIntFromBuffer(generateRandomBytes(8),
+      little: true, signed: signed);
+}
+
+List<int> serializeBytes(data) {
+  if (!(data is List<int>)) {
+    if (data is String) {
+      data = utf8.decode(data);
+    } else {
+      throw("Bytes or str expected, not ${data.constructor.name}");
+    }
+  }
+  const r = [];
+  int padding;
+  if (data.length < 254) {
+    padding = (data.length + 1) % 4;
+    if (padding != 0) {
+      padding = 4 - padding;
+    }
+    r.add([data.length]);
+    r.add(data);
+  } else {
+    padding = data.length % 4;
+    if (padding != 0) {
+      padding = 4 - padding;
+    }
+    r.add([254, data.length % 256+(data.length >> 8) % 256+(data.length >> 16) % 256]);
+    r.add(data);
+  }
+  final s = new List(padding);
+  s.fillRange(0,padding,0);
+  r.add(s);
+
+  return r.expand((element) => element).toList();
+
+}
+
 void main() {
-  final x =
-      readBufferFromBigInt(44454544444444, 8, little: true, signed: false);
+  final x = new Crc32Zlib().convert([1, 2, 3]);
   print(x);
-  final y = readBigIntFromBuffer(x, little: true, signed: false);
-  print(y);
 }

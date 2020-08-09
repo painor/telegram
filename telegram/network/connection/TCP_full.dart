@@ -2,7 +2,7 @@ import 'package:crclib/crclib.dart';
 
 import '../../extensions/future_socket.dart';
 import '../../utils.dart';
-import 'Connection.dart';
+import 'connection.dart';
 
 class FullPacketCodec extends PacketCodec {
   int _sendCounter;

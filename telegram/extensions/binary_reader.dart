@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 
 import '../utils.dart';
@@ -142,17 +143,26 @@ class BinaryReader {
   }
 
   /**
+   * Reads a real floating point (8 bytes) value.
+   * @returns {BigInteger}
+   */
+  readDouble() {
+
+    // was this a bug ? it should have been <d
+    return ByteData.sublistView(Uint8List.fromList(this.read(length: 8))).getFloat64(0,Endian.little);
+  }
+  /**
    * Reads a Telegram object.
    */
   dynamic tgReadObject() {
-    final finalConstructorId = this.readInt(signed: false);
-    var clazz = tlobjects[finalConstructorId];
+    final constructorId = this.readInt(signed: false);
+    var clazz = tlobjects[constructorId];
     if (clazz == null) {
       /**
        * The class was None, but there's still a
        * chance of it being a manually parsed value like bool!
        */
-      final value = finalConstructorId;
+      final value = constructorId;
       if (value == 0x997275b5) {
         // boolTrue
         return true;
@@ -169,13 +179,13 @@ class BinaryReader {
         return temp;
       }
 
-      clazz = coreObjects[finalConstructorId];
+      clazz = coreObjects[constructorId];
 
       if (clazz == null) {
         // If there was still no luck, give up
         this.seek(-4); // Go back
         final pos = this.tellPosition();
-        final error = new TypeNotFoundError(finalConstructorId, this.read());
+        final error = new TypeNotFoundError(constructorId, this.read());
         this.setPosition(pos);
         throw error;
       }

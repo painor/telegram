@@ -55,9 +55,6 @@ class FutureSocket {
     while (true) {
       final thisTime = await this.read(number);
       readData.write(thisTime);
-      print("number " + number.toString());
-      print("length " + thisTime.length.toString());
-
       number = number - thisTime.length;
       if (number == 0) {
         return readData.getValue();

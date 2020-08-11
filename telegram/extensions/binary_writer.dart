@@ -4,7 +4,6 @@ class BinaryWriter {
   BinaryWriter(List<int> this._stream);
 
   get length {
-
     return this._stream.length;
   }
   void write(List<int> buffer) {

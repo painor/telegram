@@ -4,4 +4,6 @@ dependencies:
   convert: ^2.1.1
   crclib: ^1.0.1
   crypto: ^2.1.5
+  pointycastle:
+    git: git@github.com:bcgit/pc-dart.git
 

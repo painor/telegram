@@ -12,9 +12,9 @@ class GZIPPacked {
     this.data = data;
   }
 
-  static Future<List<int>> gzipIfSmaller(contentRelated, data) async {
+  static List<int> gzipIfSmaller(contentRelated, data) {
     if (contentRelated && data.length > 512) {
-      final gzipped = await (new GZIPPacked(data)).toBytes();
+      final gzipped = new GZIPPacked(data).toBytes();
       if (gzipped.length < data.length) {
         return gzipped;
       }
@@ -33,9 +33,9 @@ class GZIPPacked {
 
   }
 
-  toBytes() async {
+  toBytes() {
     final g = readBufferFromBigInt(GZIPPacked.CONSTRUCTOR_ID, 4);
-    return  g + serializeBytes(await GZIPPacked.gzip(this.data));
+    return  g + serializeBytes(GZIPPacked.gzip(this.data));
   }
 
   static  read(BinaryReader reader) async {
@@ -46,8 +46,8 @@ class GZIPPacked {
     return await GZIPPacked.gzip(reader.tgReadBytes());
   }
 
-  static fromReader(reader) async {
-    return new GZIPPacked(await GZIPPacked.ungzip(reader.tgReadBytes()));
+  static fromReader(reader) {
+    return new GZIPPacked(GZIPPacked.ungzip(reader.tgReadBytes()));
   }
 }
 

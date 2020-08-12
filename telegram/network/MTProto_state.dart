@@ -60,7 +60,7 @@ class MTProtoState {
    * @param message
    */
   void updateMessageId(message) {
-    message.msgId = this._getNewMsgId();
+    message.msgId = this.getNewMsgId();
   }
 
   /**
@@ -88,7 +88,7 @@ class MTProtoState {
    * @param afterId
    */
   BigInt writeDataAsMessage(BinaryWriter buffer, List<int> data, bool contentRelated, bool afterId) {
-    final msgId = this._getNewMsgId();
+    final msgId = this.getNewMsgId();
     final seqNo = this._getSeqNo(contentRelated);
     var body;
     if (!afterId) {
@@ -184,7 +184,7 @@ class MTProtoState {
    * time (in ms) since epoch, applying a known time offset.
    * @private
    */
-  BigInt _getNewMsgId() {
+  BigInt getNewMsgId() {
     final now = DateTime.now().millisecond / 1000 + this.timeOffset;
     final nanoseconds = ((now - now.floor()) * 1e9).floor();
     BigInt newMsgId = (BigInt.from(now.floor()) << 32) | (BigInt.from(nanoseconds) << 2);
@@ -201,7 +201,7 @@ class MTProtoState {
    * @param correctMsgId {BigInteger}
    */
   BigInt updateTimeOffset(correctMsgId) {
-    final bad = this._getNewMsgId();
+    final bad = this.getNewMsgId();
     final old = this.timeOffset;
     final now = (DateTime.now().millisecondsSinceEpoch / 1000).floor();
     final correct = correctMsgId >> 32;

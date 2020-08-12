@@ -4,7 +4,7 @@ import 'package:pointycastle/api.dart';
 import 'package:pointycastle/block/aes_fast.dart';
 import 'package:pointycastle/block/modes/ecb.dart';
 
-import 'utils.dart';
+import '../utils.dart';
 
 class IGE {
   /**
@@ -38,7 +38,6 @@ class IGE {
       //This might be a bug in the crypto module
 
       final plainTextBlock = aes.process((cipherTextBlock));
-      print(plainTextBlock);
       for (var i = 0; i < 16; i++) {
         plainTextBlock[i] ^= iv1[i];
       }
@@ -67,7 +66,6 @@ class IGE {
       plainText.addAll(generateRandomBytes(16 - padding));
     }
     plainText = Uint8List.fromList(plainText);
-
 
     var iv1 = iv.sublist(0, (iv.length / 2).floor());
     var iv2 = iv.sublist((iv.length / 2).floor());

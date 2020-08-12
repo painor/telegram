@@ -1,7 +1,8 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-
+import '../tl/all_tl_objects.dart';
+import '../tl/core/core.dart';
 import '../utils.dart';
 
 class BinaryReader {
@@ -38,7 +39,7 @@ class BinaryReader {
    * @returns {BigInteger}
    */
   BigInt readLong({bool signed :true}) {
-    return this.readLargeInt(64, signed);
+    return this.readLargeInt(64, signed:signed);
   }
 
   /**
@@ -46,7 +47,7 @@ class BinaryReader {
    * @param bits
    * @param signed {Boolean}
    */
-  BigInt readLargeInt(int bits, bool signed) {
+  BigInt readLargeInt(int bits, {bool signed=true}) {
     final buffer = this.read(length:(bits / 8).floor());
     return readBigIntFromBuffer(buffer, little: true, signed: signed);
   }
@@ -185,7 +186,7 @@ class BinaryReader {
         // If there was still no luck, give up
         this.seek(-4); // Go back
         final pos = this.tellPosition();
-        final error = new TypeNotFoundError(constructorId, this.read());
+        final error = new Error();
         this.setPosition(pos);
         throw error;
       }

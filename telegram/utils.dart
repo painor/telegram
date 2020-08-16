@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:core';
 import 'dart:math';
 import 'package:convert/convert.dart';
+import 'package:crypto/crypto.dart';
 
 BigInt readBigIntFromBuffer(List<int> buffer, {little: true, signed: false}) {
   final bytesNumber = buffer.length;
@@ -9,15 +10,37 @@ BigInt readBigIntFromBuffer(List<int> buffer, {little: true, signed: false}) {
     buffer = buffer.reversed.toList();
   }
   BigInt bigInt = BigInt.parse(hex.encode(buffer), radix: 16);
-  if (signed && (bigInt.toRadixString(2).length / 8).floor() >= bytesNumber) {
+  if (signed && (bigInt
+      .toRadixString(2)
+      .length / 8).floor() >= bytesNumber) {
     BigInt lesser = BigInt.two.pow(bytesNumber * 8);
     bigInt = bigInt - lesser;
   }
   return bigInt;
 }
 
-List<int> readBufferFromBigInt(bigInt, int bytesNumber,
-    {bool little: true, bool signed: false}) {
+Map<String, List<int>> generateKeyDataFromNonce(serverNonce, newNonce) {
+  serverNonce = toSignedLittleBuffer(serverNonce, number: 16);
+  newNonce = toSignedLittleBuffer(newNonce, number: 32);
+  final hash1 = sha1
+      .convert([newNonce, serverNonce].expand((element) => element))
+      .bytes;
+  final hash2 = sha1
+      .convert([serverNonce, newNonce].expand((element) => element))
+      .bytes;
+  final hash3 = sha1
+      .convert([newNonce, newNonce].expand((element) => element))
+      .bytes;
+
+  final keyBuffer = [hash1, hash2.sublist(0, 12)].expand((element) => element);
+  final ivBuffer = [hash2.sublist(12, 20), hash3, newNonce.slice(0, 4)].expand((element) => element);
+  return {
+    'key': keyBuffer,
+    'iv': ivBuffer
+  };
+}
+
+List<int> readBufferFromBigInt(bigInt, int bytesNumber, {bool little: true, bool signed: false}) {
   bigInt = new BigInt.from(bigInt);
   final bitLength = bigInt.bitLength;
   final bytes = (bitLength / 8).ceil();
@@ -73,9 +96,24 @@ List<int> generateRandomBytes(int count) {
 }
 
 BigInt generateRandomLong({signed: true}) {
-  return readBigIntFromBuffer(generateRandomBytes(8),
-      little: true, signed: signed);
+  return readBigIntFromBuffer(generateRandomBytes(8), little: true, signed: signed);
 }
+
+BigInt minBigInt(BigInt a, BigInt b) {
+  if (a < b) {
+    return b;
+  }
+  return a;
+}
+
+List<int> getByteArray(BigInt integer, {signed: false}) {
+  final int bits = integer
+      .toRadixString(2)
+      .length;
+  final int byteLength = ((bits + 8 - 1) / 8).floor();
+  return readBufferFromBigInt(integer, byteLength, little: false, signed: signed);
+}
+
 
 List<int> toSignedLittleBuffer(BigInt big, {int number: 8}) {
   final byteArray = new List();
@@ -107,10 +145,7 @@ List<int> serializeBytes(data) {
     if (padding != 0) {
       padding = 4 - padding;
     }
-    r.add([
-      254,
-      data.length % 256 + (data.length >> 8) % 256 + (data.length >> 16) % 256
-    ]);
+    r.add([254, data.length % 256 + (data.length >> 8) % 256 + (data.length >> 16) % 256]);
     r.add(data);
   }
   final s = new List(padding);
@@ -119,9 +154,10 @@ List<int> serializeBytes(data) {
 
   return r.expand((element) => element).toList();
 }
-s(){
-  final f =3;
-  return {f,2};
+
+s() {
+  final f = 3;
+  return {f, 2};
 }
 
 void main() {}

@@ -10,9 +10,7 @@ BigInt readBigIntFromBuffer(List<int> buffer, {little: true, signed: false}) {
     buffer = buffer.reversed.toList();
   }
   BigInt bigInt = BigInt.parse(hex.encode(buffer), radix: 16);
-  if (signed && (bigInt
-      .toRadixString(2)
-      .length / 8).floor() >= bytesNumber) {
+  if (signed && (bigInt.toRadixString(2).length / 8).floor() >= bytesNumber) {
     BigInt lesser = BigInt.two.pow(bytesNumber * 8);
     bigInt = bigInt - lesser;
   }
@@ -22,22 +20,17 @@ BigInt readBigIntFromBuffer(List<int> buffer, {little: true, signed: false}) {
 Map<String, List<int>> generateKeyDataFromNonce(serverNonce, newNonce) {
   serverNonce = toSignedLittleBuffer(serverNonce, number: 16);
   newNonce = toSignedLittleBuffer(newNonce, number: 32);
-  final hash1 = sha1
-      .convert([newNonce, serverNonce].expand((element) => element))
-      .bytes;
-  final hash2 = sha1
-      .convert([serverNonce, newNonce].expand((element) => element))
-      .bytes;
-  final hash3 = sha1
-      .convert([newNonce, newNonce].expand((element) => element))
-      .bytes;
+  final hash1 = sha1.convert([newNonce, serverNonce].expand((element) => element)).bytes;
+  final hash2 = sha1.convert([serverNonce, newNonce].expand((element) => element)).bytes;
+  final hash3 = sha1.convert([newNonce, newNonce].expand((element) => element)).bytes;
 
   final keyBuffer = [hash1, hash2.sublist(0, 12)].expand((element) => element);
   final ivBuffer = [hash2.sublist(12, 20), hash3, newNonce.slice(0, 4)].expand((element) => element);
-  return {
-    'key': keyBuffer,
-    'iv': ivBuffer
-  };
+  return {'key': keyBuffer, 'iv': ivBuffer};
+}
+
+asyncSleep(duration) async {
+  await Future.delayed(Duration(seconds: duration));
 }
 
 List<int> readBufferFromBigInt(bigInt, int bytesNumber, {bool little: true, bool signed: false}) {
@@ -107,13 +100,10 @@ BigInt minBigInt(BigInt a, BigInt b) {
 }
 
 List<int> getByteArray(BigInt integer, {signed: false}) {
-  final int bits = integer
-      .toRadixString(2)
-      .length;
+  final int bits = integer.toRadixString(2).length;
   final int byteLength = ((bits + 8 - 1) / 8).floor();
   return readBufferFromBigInt(integer, byteLength, little: false, signed: signed);
 }
-
 
 List<int> toSignedLittleBuffer(BigInt big, {int number: 8}) {
   final byteArray = new List();

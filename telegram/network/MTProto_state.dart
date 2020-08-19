@@ -1,4 +1,5 @@
 import '../crypto/IGE.dart';
+import '../crypto/auth_key.dart';
 import '../extensions/binary_reader.dart';
 import '../extensions/binary_writer.dart';
 import '../tl/core/GZIP_packed.dart';
@@ -7,7 +8,7 @@ import '../utils.dart';
 import 'package:crypto/crypto.dart';
 
 class MTProtoState {
-  var authKey, _log, timeOffset, salt, id, _sequence, _lastMsgId;
+  var authKey, _log, timeOffset, salt, id, sequence, _lastMsgId;
 
   /**
    *
@@ -34,13 +35,13 @@ class MTProtoState {
    * @param authKey
    * @param loggers
    */
-  MTProtoState(List<int> authKey, loggers) {
+  MTProtoState(AuthKey authKey, loggers) {
     this.authKey = authKey;
     this._log = loggers;
     this.timeOffset = 0;
     this.salt = 0;
 
-    this.id = this._sequence = this._lastMsgId = null;
+    this.id = this.sequence = this._lastMsgId = null;
     this.reset();
   }
 
@@ -50,7 +51,7 @@ class MTProtoState {
   void reset() {
     // Session IDs can be random on every connection
     this.id = generateRandomLong(signed: true);
-    this._sequence = 0;
+    this.sequence = 0;
     this._lastMsgId = BigInt.zero;
   }
 
@@ -225,11 +226,11 @@ class MTProtoState {
    */
   int _getSeqNo(contentRelated) {
     if (contentRelated) {
-      final result = this._sequence * 2 + 1;
-      this._sequence += 1;
+      final result = this.sequence * 2 + 1;
+      this.sequence += 1;
       return result;
     } else {
-      return this._sequence * 2;
+      return this.sequence * 2;
     }
   }
 }

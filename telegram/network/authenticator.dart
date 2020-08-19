@@ -3,7 +3,7 @@ import '../crypto/auth_key.dart';
 import '../crypto/IGE.dart';
 import '../crypto/RSA.dart';
 import '../crypto/factorizator.dart';
-import '../errors.dart';
+import '../errors/common.dart';
 import '../extensions/binary_reader.dart';
 import '../utils.dart';
 import '../tl/requests/requests.dart';
@@ -154,7 +154,7 @@ doAuthentication(sender, log) async {
   if (dhGen.serverNonce.neq(resPQ.serverNonce)) {
     throw new SecurityError('Step 3 invalid ${name} server nonce from server');
   }
-  final AuthKey authKey = new AuthKey();
+  //final AuthKey authKey = new AuthKey();
   return;
   /*
  await authKey.setKey(getByteArray(gab));

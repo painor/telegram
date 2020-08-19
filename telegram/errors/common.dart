@@ -101,8 +101,8 @@ class BadMessageError implements Exception {
     64: 'Invalid container.',
   };
   int code;
-
-  BadMessageError(this.code);
+  var request;
+  BadMessageError(this.request,this.code);
 
   String toString() {
     return (this.ErrorMessages[code] ?? '''Unknown error code (this should not happen): ${code}.''');

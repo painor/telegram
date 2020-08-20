@@ -11,14 +11,17 @@ class AsyncQueue {
   }
 
   Future<void> push(List<int> value) async{
-    await this.canPush;
+    await this.canPush.future;
+    print("ADDED VALUE");
     this._queue.add(value);
     this.canGet.complete(true);
     this.canPush = new Completer();
   }
 
   Future<List<int>> pop() async{
-    await this.canGet;
+    await this.canGet.future;
+    print("GETTINBG");
+    print(this._queue);
     final List<int> returned = this._queue.removeLast();
     this.canPush.complete(true);
     this.canGet = new Completer<bool>();

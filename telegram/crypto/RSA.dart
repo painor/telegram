@@ -54,26 +54,25 @@ final _serverKeys = {};
  * @returns {Buffer|*|undefined} the cipher text, or None if no key matching this fingerprint is found.
  */
 
-RSAencrypt(List<int> fingerprint, List<int> data) {
+RSAencrypt(BigInt fingerprint, List<int> data) {
 
   PUBLIC_KEYS.forEach((Map<String,dynamic>element) {
-  _serverKeys[readBigIntFromBuffer(element["fingerprint"].sublist(-8),little: true, signed: true)] = element;
+  _serverKeys[readBigIntFromBuffer(element["fingerprint"].sublist(element["fingerprint"].length-8),little: true, signed: true)] = element;
   });
-
   final key = _serverKeys[fingerprint];
-  if (!key) {
+  if (key==null) {
     return null;
   }
 
 // len(sha1.digest) is always 20, so we're left with 255 - 20 - x padding
   final rand = generateRandomBytes(235 - data.length);
 
-  final toEncrypt = [sha1.convert(data).bytes,data, rand].expand((element) => element);
+  final List<int> toEncrypt = [sha1.convert(data).bytes,data, rand].expand((element) => element).toList();
 
 // rsa module rsa.encrypt adds 11 bits for padding which we don't want
 // rsa module uses rsa.transform.bytes2int(to_encrypt), easier way:
   final BigInt payload = readBigIntFromBuffer(toEncrypt, little: false);
-  final encrypted = payload.modPow(BigInt.from(key.e), key.n);
+  final encrypted = payload.modPow(BigInt.from(key['e']), key['n']);
 // rsa module uses transform.int2bytes(encrypted, keylength), easier:
   return readBufferFromBigInt(encrypted, 256, little: false);
 }

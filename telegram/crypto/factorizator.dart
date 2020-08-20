@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:math';
 import '../utils.dart';
 
@@ -28,9 +29,9 @@ class Factorizator {
     if (pq.remainder(BigInt.two) == (BigInt.zero)) {
       return {'p': BigInt.two, 'q': BigInt.from(pq / (BigInt.two))};
     }
-    BigInt y = BigInt.from(rng.nextInt((pq - BigInt.one).toInt()) + 1);
-    final BigInt c = BigInt.from(rng.nextInt((pq - BigInt.one).toInt()) + 1);
-    final BigInt m = BigInt.from(rng.nextInt((pq - BigInt.one).toInt()) + 1);
+    BigInt y = BigInt.from(rng.nextInt((pq - BigInt.one).toInt().toUnsigned(32)) + 1);
+    final BigInt c = BigInt.from(rng.nextInt((pq - BigInt.one).toInt().toUnsigned(32)) + 1);
+    final BigInt m = BigInt.from(rng.nextInt((pq - BigInt.one).toInt().toUnsigned(32)) + 1);
 
     BigInt g = BigInt.one;
     BigInt r = BigInt.one;
@@ -40,6 +41,7 @@ class Factorizator {
     BigInt k;
 
     while (g == (BigInt.one)) {
+
       x = y;
       for (var i = 0; BigInt.from(i) < r; i++) {
         y = (y.modPow(BigInt.two, pq) + c).remainder(pq);

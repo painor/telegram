@@ -11,6 +11,7 @@ class FutureSocket {
   Completer<bool> canRead = new Completer<bool>();
 
   Future<void> connect(String ip, int port) async {
+    print("Port :$port and ip is $ip");
     stream = new BinaryWriter(new List<int>());
     canRead = new Completer<bool>();
 
@@ -74,9 +75,9 @@ class FutureSocket {
 
 void main() async {
   final s = new FutureSocket();
-  await s.connect("192.168.100.25", 21);
+  await s.connect("149.154.167.51", 443);
   s.write([1, 5, 4, 8]);
-  final data = await s.readExactly(10);
-  print(utf8.decode(data).replaceAll("\n", r"\n").replaceAll("\r", r"\r"));
+ // final data = await s.readExactly(10);
+  //print(utf8.decode(data).replaceAll("\n", r"\n").replaceAll("\r", r"\r"));
   await s.close();
 }

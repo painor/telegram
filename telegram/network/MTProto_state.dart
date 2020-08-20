@@ -8,7 +8,8 @@ import '../utils.dart';
 import 'package:crypto/crypto.dart';
 
 class MTProtoState {
-  var authKey, _log, timeOffset, salt, id, sequence, _lastMsgId;
+  var authKey, _log, timeOffset, salt, id, sequence;
+  BigInt _lastMsgId;
 
   /**
    *
@@ -189,7 +190,7 @@ class MTProtoState {
     final now = DateTime.now().millisecond / 1000 + this.timeOffset;
     final nanoseconds = ((now - now.floor()) * 1e9).floor();
     BigInt newMsgId = (BigInt.from(now.floor()) << 32) | (BigInt.from(nanoseconds) << 2);
-    if (this._lastMsgId.greaterOrEquals(newMsgId)) {
+    if (this._lastMsgId>=(newMsgId)) {
       newMsgId = this._lastMsgId + BigInt.from(4);
     }
     this._lastMsgId = newMsgId;

@@ -6,6 +6,7 @@ import 'connection.dart';
 
 class FullPacketCodec extends PacketCodec {
   int _sendCounter;
+  var tag = null;
 
   FullPacketCodec(connection) : super(connection) {
     this._sendCounter = 0; // Telegram will ignore us otherwise
@@ -15,14 +16,13 @@ class FullPacketCodec extends PacketCodec {
 // https://core.telegram.org/mtproto#tcp-transport
 // total length, sequence number, packet and checksum (CRC32)
     final length = data.length + 12;
-    final toSend = new List();
+    final toSend = new List<int>();
 
     toSend.addAll(readBufferFromBigInt(length, 4, signed: true));
 
     toSend.addAll(readBufferFromBigInt(this._sendCounter, 4, signed: true));
     toSend.addAll(data);
-    toSend.addAll(
-        readBufferFromBigInt(new Crc32Zlib().convert(toSend), 4, signed: true));
+    toSend.addAll(readBufferFromBigInt(new Crc32Zlib().convert(toSend), 4, signed: true));
 
     this._sendCounter += 1;
 
@@ -40,19 +40,16 @@ class FullPacketCodec extends PacketCodec {
     if (packetLenSeq == false) {
       return [];
     }
-    final int packetLen = readBigIntFromBuffer(
-        packetLenSeq.sublist(0, 4), signed: true).toInt();
+    final int packetLen = readBigIntFromBuffer(packetLenSeq.sublist(0, 4), signed: true).toInt();
     final body = await reader.read(packetLen - 8);
 
-    final int checksum = readBigIntFromBuffer(
-        body.sublist(body.length - 4), signed: false).toInt();
-
+    final int checksum = readBigIntFromBuffer(body.sublist(body.length - 4), signed: false).toInt();
 
     body.removeRange(body.length - 4, body.length);
     packetLenSeq.addAll(body);
     final validChecksum = new Crc32Zlib().convert(packetLenSeq);
     if (!(validChecksum == checksum)) {
-      throw("Invalid checksum (${checksum} when ${validChecksum} was expected). This packet should be skipped.");
+      throw ("Invalid checksum (${checksum} when ${validChecksum} was expected). This packet should be skipped.");
     }
     return body;
   }

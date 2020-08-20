@@ -1,3 +1,4 @@
+import 'package:convert/convert.dart';
 import 'package:crypto/crypto.dart';
 import '../crypto/auth_key.dart';
 import '../crypto/IGE.dart';
@@ -8,20 +9,22 @@ import '../extensions/binary_reader.dart';
 import '../utils.dart';
 import '../tl/requests/requests.dart';
 import '../tl/constructors/constructors.dart';
+import 'MTProto_plain_sender.dart';
 
-doAuthentication(sender, log) async {
+doAuthentication(MTProtoPlainSender sender, log) async {
   // Step 1 sending: PQ Request, endianness doesn't matter since it's random
   var bytes = generateRandomBytes(16);
 
   final nonce = readBigIntFromBuffer(bytes, little: false, signed: true);
-
   final ResPQ resPQ = await sender.send(new ReqPqMulti(nonce: nonce));
   log.debug('Starting authKey generation step 1');
 
   if (!(resPQ is ResPQ)) {
     throw ('Step 1 answer was ${resPQ}');
   }
-  if (resPQ.nonce != (nonce)) {
+  if (resPQ.nonce != nonce) {
+    print("Sent nonce $nonce");
+    print("Recieved Nonce ${resPQ.nonce}");
     throw new SecurityError('Step 1 invalid nonce from server');
   }
   final pq = readBigIntFromBuffer(resPQ.pq, little: false, signed: true);
@@ -52,7 +55,7 @@ doAuthentication(sender, log) async {
   var cipherText = null;
   var targetFingerprint = null;
   for (final fingerprint in resPQ.serverPublicKeyFingerprints) {
-    cipherText = await RSAencrypt(getByteArray(fingerprint), pqInnerData.getBytes());
+    cipherText = await RSAencrypt(fingerprint, pqInnerData.getBytes());
     if (cipherText != null && cipherText != null) {
       targetFingerprint = fingerprint;
       break;
@@ -61,7 +64,14 @@ doAuthentication(sender, log) async {
   if (cipherText == null) {
     throw new SecurityError('Step 2 could not find a valid key for fingerprints');
   }
-
+  var obj = new ReqDHParams(
+    nonce: resPQ.nonce,
+    serverNonce: resPQ.serverNonce,
+    p: p,
+    q: q,
+    publicKeyFingerprint: targetFingerprint,
+    encryptedData: cipherText,
+  );
   final serverDhParams = await sender.send(
     new ReqDHParams(
       nonce: resPQ.nonce,
@@ -75,11 +85,11 @@ doAuthentication(sender, log) async {
   if (!(serverDhParams is ServerDHParamsOk || serverDhParams is ServerDHParamsFail)) {
     throw ('Step 2.1 answer was ${serverDhParams}');
   }
-  if (serverDhParams.nonce.neq(resPQ.nonce)) {
+  if (serverDhParams.nonce != resPQ.nonce) {
     throw new SecurityError('Step 2 invalid nonce from server');
   }
 
-  if (serverDhParams.serverNonce.neq(resPQ.serverNonce)) {
+  if (serverDhParams.serverNonce != (resPQ.serverNonce)) {
     throw new SecurityError('Step 2 invalid server nonce from server');
   }
 
@@ -107,15 +117,15 @@ doAuthentication(sender, log) async {
   final plainTextAnswer = IGE.decryptIge(serverDhParams.encryptedAnswer, key, iv);
   final reader = new BinaryReader(plainTextAnswer);
   reader.read(length: 20); // hash sum
-  final serverDhInner = reader.tgReadObject();
+  final ServerDHInnerData serverDhInner = reader.tgReadObject();
   if (!(serverDhInner is ServerDHInnerData)) {
     throw ('Step 3 answer was ${serverDhInner}');
   }
 
-  if (serverDhInner.nonce.neq(resPQ.nonce)) {
+  if (serverDhInner.nonce != resPQ.nonce) {
     throw new SecurityError('Step 3 Invalid nonce in encrypted answer');
   }
-  if (serverDhInner.serverNonce.neq(resPQ.serverNonce)) {
+  if (serverDhInner.serverNonce != resPQ.serverNonce) {
     throw new SecurityError('Step 3 Invalid server nonce in encrypted answer');
   }
   final dhPrime = readBigIntFromBuffer(serverDhInner.dhPrime, little: false, signed: false);
@@ -133,10 +143,10 @@ doAuthentication(sender, log) async {
     gB: getByteArray(gb, signed: false),
   ).getBytes();
 
-  final clientDdhInnerHashed = [sha1.convert(clientDhInner).bytes, clientDhInner].expand((element) => element);
+  final clientDdhInnerHashed = [sha1.convert(clientDhInner).bytes, clientDhInner].expand((element) => element).toList();
   // Encryption
   final clientDhEncrypted = IGE.encryptIge(clientDdhInnerHashed, key, iv);
-  final dhGen = await sender.send(
+  final DhGenOk dhGen = await sender.send(
     new SetClientDHParams(
       nonce: resPQ.nonce,
       serverNonce: resPQ.serverNonce,
@@ -148,30 +158,30 @@ doAuthentication(sender, log) async {
     throw ('Step 3.1 answer was ${dhGen}');
   }
   final name = dhGen.runtimeType;
-  if (dhGen.nonce.neq(resPQ.nonce)) {
+  if (dhGen.nonce != resPQ.nonce) {
     throw new SecurityError('Step 3 invalid ${name} nonce from server');
   }
-  if (dhGen.serverNonce.neq(resPQ.serverNonce)) {
+  if (dhGen.serverNonce != resPQ.serverNonce) {
     throw new SecurityError('Step 3 invalid ${name} server nonce from server');
   }
-  //final AuthKey authKey = new AuthKey();
-  return;
-  /*
- await authKey.setKey(getByteArray(gab));
+  final AuthKey authKey = new AuthKey(null, null);
 
-  final nonceNumber = 1 + nonceTypes.indexOf(dhGen.constructor);
+  await authKey.setKey(getByteArray(gab));
+
+  final nonceNumber = 1 + nonceTypes.indexOf(dhGen.runtimeType);
 
   final newNonceHash = await authKey.calcNewNonceHash(newNonce, nonceNumber);
-  final dhHash = dhGen['newNonceHash${nonceNumber}'];
 
-  if (dhHash.neq(newNonceHash)) {
-  throw new SecurityError('Step 3 invalid new nonce hash')
+  final dhHash = dhGen.newNonceHash1;
+
+  if (dhHash != newNonceHash) {
+    throw new SecurityError('Step 3 invalid new nonce hash');
   }
 
   if (!(dhGen is DhGenOk)) {
-  throw ('Step 3.2 answer was ${dhGen}');
+    throw ('Step 3.2 answer was ${dhGen}');
   }
   log.debug('Finished authKey generation step 3');
 
-  return { authKey, timeOffset };*/
+  return {"authKey": authKey, "timeOffset": timeOffset};
 }

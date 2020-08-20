@@ -44,9 +44,9 @@ class AuthKey {
   getKey() => this._key;
 
   calcNewNonceHash(newNonce, number) {
-    newNonce = toSignedLittleBuffer(newNonce, number: 32);
+    List<int> newNonceList = toSignedLittleBuffer(newNonce, number: 32);
     final n = readBufferFromBigInt(BigInt.from(number), 1);
-    final data = [newNonce, n, readBufferFromBigInt(this.auxHash, 8, little: true)].expand((element) => element);
+    final List<int> data = [newNonceList, n, readBufferFromBigInt(this.auxHash, 8, little: true)].expand((element) => element).toList();
 
     // Calculates the message key from the given data
     final shaData = sha1

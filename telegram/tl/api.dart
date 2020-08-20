@@ -33,8 +33,8 @@ buildApiFromTlSchema() {
     writer.write("import 'constructors/$x.dart' as $x;\n");
   }
   writer.write("import 'constructors/constructors.dart';\n");
-
-  writer.write("final tlobjects = {");
+  writer.write("\nconst int LAYER = ${definitions['layer']};\n");
+  writer.write("final Map<int, dynamic> tlobjects = {");
   for (final tlobject in definitions['constructors']) {
     writer.write(tlobject['constructorId'].toString() + ": ");
     if (tlobject['namespace'] != null) {
@@ -59,9 +59,19 @@ final tlContent = new File('telegram/static/api.tl').readAsStringSync();
 
 final schemeContent = new File('telegram/static/schema.tl').readAsStringSync();
 
+extractLayer(String tlContent) {
+  final layerRegex = new RegExp(r'^//\s*LAYER\s*(\d+)');
+  for (String line in tlContent.split("\n")) {
+    if (layerRegex.hasMatch(line)) {
+      return layerRegex.allMatches(line).first.group(1);
+      throw ("stop");
+    }
+  }
+}
+
 loadFromTlSchemas() {
   var res = extractParams(tlContent);
-
+  var layer = extractLayer(tlContent);
   final constructorParamsApi = res[0];
   final functionParamsApi = res[1];
   res = extractParams(schemeContent);
@@ -70,7 +80,7 @@ loadFromTlSchemas() {
   final constructors = [constructorParamsApi, constructorParamsSchema].expand((element) => element).toList();
   final requests = [functionParamsApi, functionParamsSchema].expand((element) => element).toList();
 
-  return {'constructors': constructors, 'requests': requests};
+  return {'constructors': constructors, 'requests': requests, 'layer': layer};
 }
 
 // {name: DestroySession, constructorId: 3880853798, argsConfig: {sessionId: {isVector: false, isFlag: false, skipConstructorId: true,
@@ -264,7 +274,7 @@ bool writeArgToBytes(ClassWriter writer, arg, Map<dynamic, dynamic> argsConfig, 
 }
 
 writeGetBytes(ClassWriter writer, String name, argsConfig, constructorId) {
-  writer.write("List<int> getBytes(){");
+  writer.write("\n\tList<int> getBytes(){");
   final Map<int, List<dynamic>> repeatedArgs = {};
   argsConfig.forEach((argName, arg) {
     if (arg['isFlag']) {
@@ -281,7 +291,7 @@ writeGetBytes(ClassWriter writer, String name, argsConfig, constructorId) {
       writer.write(",");
     }
   });
-  writer.write("].expand((element) => element);");
+  writer.write("].expand((element) => element).toList();");
   writer.write("}");
 }
 
@@ -336,7 +346,7 @@ getArgFromReader(ClassWriter writer, arg, argName, {end: true}) {
       writer.write("\n");
     }
     arg['isVector'] = false;
-    writer.write("var $argName = [];");
+    writer.write("${getType(arg['type'], true)} $argName = [];");
     writer.write("len = reader.readInt();");
     writer.write("\n\t");
     writer.write("for (var i=0;i<len;i++){");

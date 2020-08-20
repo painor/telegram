@@ -29,11 +29,10 @@ class MTProtoPlainSender {
     List<int> body = request.getBytes();
     BigInt msgId = this._state.getNewMsgId();
     final m = toSignedLittleBuffer(msgId, number: 8);
-    final b = new List<int>(4);
+    final b = new List<int>();
     b.addAll(readBufferFromBigInt(body.length, 4,signed: true));
 
-    final res = [new List.filled(8,0), m, b, body].expand((element) => element);
-
+    final res = [new List.filled(8,0), m, b, body].expand((element) => element).toList();
     await this._connection.send(res);
     body = await this._connection.recv();
     if (body.length < 8) {

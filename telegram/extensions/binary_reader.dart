@@ -1,9 +1,10 @@
 import 'dart:convert';
 import 'dart:typed_data';
-
+import 'dart:core';
 import '../tl/all_tl_objects.dart';
 import '../tl/core/core.dart';
 import '../utils.dart';
+import 'dart:mirrors';
 
 class BinaryReader {
   final List<int> stream;
@@ -27,8 +28,7 @@ class BinaryReader {
    * @param signed {Boolean}
    */
   int readInt({bool signed: true}) {
-    final res = readBigIntFromBuffer(
-        this.stream.sublist(this.offset, this.offset + 4), signed: signed);
+    final res = readBigIntFromBuffer(this.stream.sublist(this.offset, this.offset + 4), signed: signed);
     this.offset += 4;
     return res.toInt();
   }
@@ -38,8 +38,8 @@ class BinaryReader {
    * @param signed
    * @returns {BigInteger}
    */
-  BigInt readLong({bool signed :true}) {
-    return this.readLargeInt(64, signed:signed);
+  BigInt readLong({bool signed: true}) {
+    return this.readLargeInt(64, signed: signed);
   }
 
   /**
@@ -47,8 +47,8 @@ class BinaryReader {
    * @param bits
    * @param signed {Boolean}
    */
-  BigInt readLargeInt(int bits, {bool signed=true}) {
-    final buffer = this.read(length:(bits / 8).floor());
+  BigInt readLargeInt(int bits, {bool signed = true}) {
+    final buffer = this.read(length: (bits / 8).floor());
     return readBigIntFromBuffer(buffer, little: true, signed: signed);
   }
 
@@ -56,15 +56,14 @@ class BinaryReader {
    * Read the given amount of bytes, or -1 to read all remaining.
    * @param length {number}
    */
-  List<int> read({length:-1}) {
+  List<int> read({length: -1}) {
     if (length == -1) {
       length = this.stream.length - this.offset;
     }
     final result = this.stream.sublist(this.offset, this.offset + length);
     this.offset += length;
     if (result.length != length) {
-      throw("No more data left to read (need ${length}, got ${result
-          .length}: ${result});");
+      throw ("No more data left to read (need ${length}, got ${result.length}: ${result});");
     }
     return result;
   }
@@ -90,8 +89,7 @@ class BinaryReader {
     var padding;
     var length;
     if (firstByte == 254) {
-      length =
-      this.readByte() | (this.readByte() << 8) | (this.readByte() << 16);
+      length = this.readByte() | (this.readByte() << 8) | (this.readByte() << 16);
       padding = length % 4;
     } else {
       length = firstByte;
@@ -129,7 +127,7 @@ class BinaryReader {
       // boolFalse
       return false;
     } else {
-      throw("Invalid boolean code ${value.toRadixString(16)}");
+      throw ("Invalid boolean code ${value.toRadixString(16)}");
     }
   }
 
@@ -148,16 +146,17 @@ class BinaryReader {
    * @returns {BigInteger}
    */
   readDouble() {
-
     // was this a bug ? it should have been <d
-    return ByteData.sublistView(Uint8List.fromList(this.read(length: 8))).getFloat64(0,Endian.little);
+    return ByteData.sublistView(Uint8List.fromList(this.read(length: 8))).getFloat64(0, Endian.little);
   }
+
   /**
    * Reads a Telegram object.
    */
   dynamic tgReadObject() {
     final constructorId = this.readInt(signed: false);
     var clazz = tlobjects[constructorId];
+
     if (clazz == null) {
       /**
        * The class was None, but there's still a
@@ -191,7 +190,8 @@ class BinaryReader {
         throw error;
       }
     }
-    return clazz.fromReader(this);
+    var c = reflectClass(clazz);
+    return c.getField(Symbol('fromReader')).reflectee(this);
   }
 
   /**
@@ -200,7 +200,7 @@ class BinaryReader {
    */
   List<dynamic> tgReadVector() {
     if (this.readInt(signed: false) != 0x1cb5c415) {
-      throw('Invalid constructor code, vector was expected');
+      throw ('Invalid constructor code, vector was expected');
     }
     final count = this.readInt();
     final temp = [];

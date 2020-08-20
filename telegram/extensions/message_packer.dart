@@ -39,9 +39,9 @@ class MessagePacker {
   get() async {
     if (this._queue.length == 0) {
       this._ready = new Completer<bool>();
-      await this._ready;
+      await this._ready.future;
     }
-    if (this._queue[this._queue.length - 1] == false) {
+    if (this._queue.length>0 && this._queue[this._queue.length - 1] == false) {
       this._queue = [];
       return;
     }

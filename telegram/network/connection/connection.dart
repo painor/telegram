@@ -3,6 +3,7 @@ import "dart:collection";
 
 import '../../extensions/async_queue.dart';
 import '../../extensions/future_socket.dart';
+import 'TCP_full.dart';
 
 final queue = Queue<String>();
 /**
@@ -40,7 +41,7 @@ class Connection {
 
   void _connect() async {
     this._log.debug('Connecting');
-    this._codec = reflectClass(this.PacketCodecClass).newInstance(new  Symbol(''), []);
+    this._codec = new FullPacketCodec(this);
     await this.socket.connect(this._ip, this._port);
     this._log.debug('Finished connecting');
     // await this.socket.connect({host: this._ip, port: this._port});
@@ -50,7 +51,7 @@ class Connection {
     await this._connect();
     this._connected = true;
 
-    if (!this._sendTask) {
+    if (this._sendTask==null) {
       this._sendTask = this._sendLoop();
     }
     this._recvTask = this._recvLoop();
@@ -62,7 +63,7 @@ class Connection {
     await this.socket.close();
   }
 
-  send(data) async{
+  send(List<int> data) async{
     if (!this._connected) {
       throw('Not connected');
     }
@@ -92,20 +93,24 @@ class Connection {
         }
         await this._send(data);
       }
-    } catch (e) {
+    } catch (e,stacktrace) {
+      print(stacktrace);
+      print(e);
       this._log.info('The server closed the connection while sending');
     }
   }
 
   _recvLoop() async{
-    var data;
+    List<int> data;
     while (this._connected) {
       try {
         data = await this._recv();
-        if (!data) {
+        if (data.length==0) {
           throw("no data received");
         }
-      } catch (e) {
+      } catch (e,stacktrace) {
+        print(e);
+        print(stacktrace);
         this._log.info('connection closed');
         //await this._recvArray.push()
 
@@ -116,7 +121,7 @@ class Connection {
     }
   }
   _initConn() async {
-    if (this._codec.tag) {
+    if (this._codec.tag!=null) {
       await this.socket.write(this._codec.tag);
     }
   }

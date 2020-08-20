@@ -12,7 +12,7 @@ class Logger {
   };
   final String messageFormat = '[%t] [%l] - [%m]';
 
-  Logger({ String level: 'error'}) {
+  Logger({ String level: 'debug'}) {
     if (_level==null) {
       _level = 'debug';
     }

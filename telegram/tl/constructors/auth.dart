@@ -4,6 +4,8 @@ import '../../extensions/binary_reader.dart';
 class SentCode {
     static const CONSTRUCTOR_ID = 1577067778;
     static const SUBCLASS_OF_ID = 1827172481;
+    final classType = "constructor";
+    final ID = 1577067778;
 	var type;
 	String phoneCodeHash;
 	var nextType;
@@ -15,13 +17,15 @@ class SentCode {
 	static SentCode fromReader(BinaryReader reader) {
 	var temp,len;final flags = reader.readInt();var type = reader.tgReadObject();var phoneCodeHash = reader.tgReadString();var nextType;if ((flags & 2)==1){var nextType = reader.tgReadObject(); } else {nextType=null;}var timeout;if ((flags & 4)==1){var timeout = reader.readInt(); } else {timeout=null;}		return new SentCode(type : type, phoneCodeHash : phoneCodeHash, nextType : nextType, timeout : timeout);
 	}
-	List<int> getBytes(){return [readBufferFromBigInt(1577067778,4),[0,0,0,0],this.type.getBytes(),serializeBytes(this.phoneCodeHash),(this.nextType==null||this.nextType==false)?[]:[this.nextType.getBytes()],(this.timeout==null||this.timeout==false)?[]:[readBufferFromBigInt(this.timeout,4,little:true,signed:true)],].expand((element) => element).toList();}
+	List<int> getBytes(){return [readBufferFromBigInt(1577067778,4),[0,0,0,0],(this.type.getBytes() as List<int>),serializeBytes(this.phoneCodeHash),(this.nextType==null||this.nextType==false)?new List<int>():[(this.nextType.getBytes() as List<int>)].expand((element) => element).toList(),(this.timeout==null||this.timeout==false)?new List<int>():[readBufferFromBigInt(this.timeout,4,little:true,signed:true)].expand((element) => element).toList(),].expand((element) => element).toList();}
 
 }
 
 class Authorization {
     static const CONSTRUCTOR_ID = 3439659286;
     static const SUBCLASS_OF_ID = 3118485049;
+    final classType = "constructor";
+    final ID = 3439659286;
 	int tmpSessions;
 	var user;
 
@@ -31,13 +35,15 @@ class Authorization {
 	static Authorization fromReader(BinaryReader reader) {
 	var temp,len;final flags = reader.readInt();var tmpSessions;if ((flags & 1)==1){var tmpSessions = reader.readInt(); } else {tmpSessions=null;}var user = reader.tgReadObject();		return new Authorization(tmpSessions : tmpSessions, user : user);
 	}
-	List<int> getBytes(){return [readBufferFromBigInt(3439659286,4),[0,0,0,0],(this.tmpSessions==null||this.tmpSessions==false)?[]:[readBufferFromBigInt(this.tmpSessions,4,little:true,signed:true)],this.user.getBytes(),].expand((element) => element).toList();}
+	List<int> getBytes(){return [readBufferFromBigInt(3439659286,4),[0,0,0,0],(this.tmpSessions==null||this.tmpSessions==false)?new List<int>():[readBufferFromBigInt(this.tmpSessions,4,little:true,signed:true)].expand((element) => element).toList(),(this.user.getBytes() as List<int>),].expand((element) => element).toList();}
 
 }
 
 class AuthorizationSignUpRequired {
     static const CONSTRUCTOR_ID = 1148485274;
     static const SUBCLASS_OF_ID = 3118485049;
+    final classType = "constructor";
+    final ID = 1148485274;
 	var termsOfService;
 
 
@@ -46,13 +52,15 @@ class AuthorizationSignUpRequired {
 	static AuthorizationSignUpRequired fromReader(BinaryReader reader) {
 	var temp,len;final flags = reader.readInt();var termsOfService;if ((flags & 1)==1){var termsOfService = reader.tgReadObject(); } else {termsOfService=null;}		return new AuthorizationSignUpRequired(termsOfService : termsOfService);
 	}
-	List<int> getBytes(){return [readBufferFromBigInt(1148485274,4),[0,0,0,0],(this.termsOfService==null||this.termsOfService==false)?[]:[this.termsOfService.getBytes()],].expand((element) => element).toList();}
+	List<int> getBytes(){return [readBufferFromBigInt(1148485274,4),[0,0,0,0],(this.termsOfService==null||this.termsOfService==false)?new List<int>():[(this.termsOfService.getBytes() as List<int>)].expand((element) => element).toList(),].expand((element) => element).toList();}
 
 }
 
 class ExportedAuthorization {
     static const CONSTRUCTOR_ID = 3751189549;
     static const SUBCLASS_OF_ID = 1607593041;
+    final classType = "constructor";
+    final ID = 3751189549;
 	int id;
 	List<int> bytes;
 
@@ -69,6 +77,8 @@ class ExportedAuthorization {
 class PasswordRecovery {
     static const CONSTRUCTOR_ID = 326715557;
     static const SUBCLASS_OF_ID = 4201829434;
+    final classType = "constructor";
+    final ID = 326715557;
 	String emailPattern;
 
 
@@ -84,6 +94,8 @@ class PasswordRecovery {
 class CodeTypeSms {
     static const CONSTRUCTOR_ID = 1923290508;
     static const SUBCLASS_OF_ID = 3019105281;
+    final classType = "constructor";
+    final ID = 1923290508;
 
 
 	CodeTypeSms();
@@ -98,6 +110,8 @@ class CodeTypeSms {
 class CodeTypeCall {
     static const CONSTRUCTOR_ID = 1948046307;
     static const SUBCLASS_OF_ID = 3019105281;
+    final classType = "constructor";
+    final ID = 1948046307;
 
 
 	CodeTypeCall();
@@ -112,6 +126,8 @@ class CodeTypeCall {
 class CodeTypeFlashCall {
     static const CONSTRUCTOR_ID = 577556219;
     static const SUBCLASS_OF_ID = 3019105281;
+    final classType = "constructor";
+    final ID = 577556219;
 
 
 	CodeTypeFlashCall();
@@ -126,6 +142,8 @@ class CodeTypeFlashCall {
 class SentCodeTypeApp {
     static const CONSTRUCTOR_ID = 1035688326;
     static const SUBCLASS_OF_ID = 4284159374;
+    final classType = "constructor";
+    final ID = 1035688326;
 	int length;
 
 
@@ -141,6 +159,8 @@ class SentCodeTypeApp {
 class SentCodeTypeSms {
     static const CONSTRUCTOR_ID = 3221273506;
     static const SUBCLASS_OF_ID = 4284159374;
+    final classType = "constructor";
+    final ID = 3221273506;
 	int length;
 
 
@@ -156,6 +176,8 @@ class SentCodeTypeSms {
 class SentCodeTypeCall {
     static const CONSTRUCTOR_ID = 1398007207;
     static const SUBCLASS_OF_ID = 4284159374;
+    final classType = "constructor";
+    final ID = 1398007207;
 	int length;
 
 
@@ -171,6 +193,8 @@ class SentCodeTypeCall {
 class SentCodeTypeFlashCall {
     static const CONSTRUCTOR_ID = 2869151449;
     static const SUBCLASS_OF_ID = 4284159374;
+    final classType = "constructor";
+    final ID = 2869151449;
 	String pattern;
 
 
@@ -186,6 +210,8 @@ class SentCodeTypeFlashCall {
 class LoginToken {
     static const CONSTRUCTOR_ID = 1654593920;
     static const SUBCLASS_OF_ID = 1800795702;
+    final classType = "constructor";
+    final ID = 1654593920;
 	int expires;
 	List<int> token;
 
@@ -202,6 +228,8 @@ class LoginToken {
 class LoginTokenMigrateTo {
     static const CONSTRUCTOR_ID = 110008598;
     static const SUBCLASS_OF_ID = 1800795702;
+    final classType = "constructor";
+    final ID = 110008598;
 	int dcId;
 	List<int> token;
 
@@ -218,6 +246,8 @@ class LoginTokenMigrateTo {
 class LoginTokenSuccess {
     static const CONSTRUCTOR_ID = 957176926;
     static const SUBCLASS_OF_ID = 1800795702;
+    final classType = "constructor";
+    final ID = 957176926;
 	var authorization;
 
 
@@ -226,6 +256,6 @@ class LoginTokenSuccess {
 	static LoginTokenSuccess fromReader(BinaryReader reader) {
 	var temp,len;var authorization = reader.tgReadObject();		return new LoginTokenSuccess(authorization : authorization);
 	}
-	List<int> getBytes(){return [readBufferFromBigInt(957176926,4),this.authorization.getBytes(),].expand((element) => element).toList();}
+	List<int> getBytes(){return [readBufferFromBigInt(957176926,4),(this.authorization.getBytes() as List<int>),].expand((element) => element).toList();}
 
 }

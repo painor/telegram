@@ -1,14 +1,17 @@
 import 'package:convert/convert.dart';
 
+import 'telegram/tl/requests/help.dart';
 import 'telegram/client/telegram_client.dart';
-import 'telegram/tl/requests/requests.dart';
-import 'telegram/tl/constructors/constructors.dart';
-import 'dart:math';
+import 'dart:io' show Platform;
+import 'telegram/extensions/binary_reader.dart';
 import 'telegram/utils.dart';
-import 'telegram/crypto/factorizator.dart';
+import 'telegram/tl/constructors/constructors.dart';
+class A{
+  static int b = 5;
 
-main() {
-  var client = TelegramClient("aa", 1, "a");
-  client.connect();
-
+}
+main()async{
+var client = TelegramClient("aa", 1, "a");
+await client.connect();
+print("Connected successfully");
 }

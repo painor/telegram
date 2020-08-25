@@ -11,7 +11,6 @@ class FutureSocket {
   Completer<bool> canRead = new Completer<bool>();
 
   Future<void> connect(String ip, int port) async {
-    print("Port :$port and ip is $ip");
     stream = new BinaryWriter(new List<int>());
     canRead = new Completer<bool>();
 

@@ -41,7 +41,7 @@ class AuthKey {
     this.keyId = reader.readLong(signed: false);
   }
 
-  getKey() => this._key;
+  List<int> getKey() => this._key;
 
   calcNewNonceHash(newNonce, number) {
     List<int> newNonceList = toSignedLittleBuffer(newNonce, number: 32);
@@ -55,7 +55,7 @@ class AuthKey {
         .sublist(4, 20);
     return readBigIntFromBuffer(shaData, little: true, signed: true);
   }
-  bool operator==(other) =>  other is AuthKey && _key!=null && other.getKey() && other.getKey().equals(this._key);
+  bool operator==(other) =>  other is AuthKey && _key!=null && other.getKey()!=null && eq(other.getKey(),this._key);
 
 
 }

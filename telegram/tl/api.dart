@@ -195,15 +195,15 @@ bool writeArgToBytes(ClassWriter writer, arg, Map<dynamic, dynamic> argsConfig, 
     if (arg['type'] == 'true') {
       return false;
     } else if (arg['isVector']) {
-      writer.write("($name==null||$name==false)?[]:[");
+      writer.write("($name==null||$name==false)?new List<int>():[");
     } else {
-      writer.write("($name==null||$name==false)?[]:[");
+      writer.write("($name==null||$name==false)?new List<int>():[");
     }
   }
 
   if (arg['isVector']) {
     if (arg['useVectorId']) {
-      writer.write("readBufferFromBigInt(0x15c4b51c,4),");
+      writer.write("readBufferFromBigInt(0x15c4b51c,4,little:false,signed:false),");
     }
     writer.write("readBufferFromBigInt($name.length,4,little:true,signed:true),");
 
@@ -214,7 +214,7 @@ bool writeArgToBytes(ClassWriter writer, arg, Map<dynamic, dynamic> argsConfig, 
     writeArgToBytes(writer, arg, argsConfig, name: 'x');
     arg['isVector'] = true;
     arg['isFlag'] = oldFlag;
-    writer.write(")");
+    writer.write(").expand((element) => element)");
   } else if (arg["flagIndicator"]) {
     bool found = false;
     argsConfig.forEach((key, value) {
@@ -248,28 +248,29 @@ bool writeArgToBytes(ClassWriter writer, arg, Map<dynamic, dynamic> argsConfig, 
   } else if (arg['type'] == 'string') {
     writer.write('serializeBytes($name)');
   } else if (arg['type'] == 'Bool') {
-    writer.write('$name ? 0xb5757299 : 0x379779bc');
+    writer.write('[$name ? 0xb5757299 : 0x379779bc]');
   } else if (arg['type'] == 'true') {
   } else if (arg['type'] == 'bytes') {
     writer.write('serializeBytes($name)');
   } else if (arg['type'] == 'date') {
     writer.write('serializeDatetime($name)');
   } else {
-    writer.write("$name.getBytes()");
+    writer.write("($name.getBytes() as List<int>)");
 
     var boxed = arg['type'][arg['type'].indexOf('.') + 1];
     boxed = boxed == boxed.toUpperCase();
 
     if (!boxed) {
-      writer.write('.slice(4)');
+      writer.write('.sublist(4)');
     }
   }
   if (arg['isFlag']) {
-    writer.write("]");
+    writer.write("].expand((element) => element).toList()");
     if (arg['isVector']) {
       writer.write("");
     }
   }
+
   return true;
 }
 
@@ -302,6 +303,7 @@ createClasses(classesType, params) {
     final subclassOfId = classParams['subclassOfId'];
     final Map<String, dynamic> argsConfig = classParams['argsConfig'];
     final namespace = classParams['namespace'];
+    final result = classParams['result'];
     final file = new File('telegram/tl/${classesType}/${namespace ?? classesType}.dart');
     var append = "\n\n";
     //Creating files
@@ -317,6 +319,8 @@ createClasses(classesType, params) {
     writer.write("""class $name {\n""");
     writer.write("""    static const CONSTRUCTOR_ID = $constructorId;
     static const SUBCLASS_OF_ID = $subclassOfId;
+    final classType = "${classesType.substring(0, classesType.length - 1)}";
+    final ID = $constructorId;
 """);
     //Declaring types
     final filtered = [];
@@ -334,9 +338,34 @@ createClasses(classesType, params) {
     writer.write("""\n\n""");
     writeFromReader(writer, name, argsConfig);
     writeGetBytes(writer, name, argsConfig, constructorId);
+    writeReadResults(writer, name, argsConfig, classesType, result);
     writer.write("\n\n");
     writer.write("}");
   }
+}
+
+void writeReadResults(ClassWriter writer, String name, Map<String, dynamic> argsConfig, classType, result) {
+  if (classType != "requests") {
+    return;
+  }
+  final m = new RegExp(r'Vector<(int|long)>').firstMatch(result);
+
+  if (m == null) {
+    writer.write("\n\treadResult(BinaryReader reader) {");
+    writer.write("\n\t");
+    writer.write("return reader.tgReadObject();\n\t}");
+    return;
+  }
+  final type = m.group(1);
+  writer.write("\n\tList<${type=="int"?"int":"BigInt"}> readResult(BinaryReader reader) {");
+  writer.write("\n\t");
+
+  writer.write("\nreader.readInt();");
+  writer.write("\nfinal range = reader.readInt();");
+  writer.write("\nfinal List<${type=="int"?"int":"BigInt"}> result = [];");
+  writer.write("\n for (int i=0;i<range;i++){\n\t");
+  writer.write("result.add(reader.read${type.substring(0, 1).toUpperCase()}${type.substring(1, type.length)}());");
+  writer.write("}\n\t}");
 }
 
 getArgFromReader(ClassWriter writer, arg, argName, {end: true}) {
@@ -434,6 +463,8 @@ void main() {
     new Directory('telegram/tl/constructors').deleteSync(recursive: true);
     new Directory('telegram/tl/requests').deleteSync(recursive: true);
     new File('telegram/tl/all_tl_objects.dart').deleteSync(recursive: true);
-  } catch (e) {}
+  } catch (e) {
+    print(e);
+  }
   buildApiFromTlSchema();
 }

@@ -20,7 +20,7 @@ class MessageContainer {
   // other factors like size per request, but we cannot know this.
   static const MAXIMUM_LENGTH = 100;
   var messages;
-
+  var ID = 0x73f1f8dc;
   MessageContainer({this.messages});
 
   static fromReader(BinaryReader reader) {

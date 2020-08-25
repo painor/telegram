@@ -8,7 +8,9 @@ import '../utils.dart';
 import 'package:crypto/crypto.dart';
 
 class MTProtoState {
-  var authKey, _log, timeOffset, salt, id, sequence;
+  AuthKey authKey;
+  var _log,  salt, id, sequence;
+  int timeOffset;
   BigInt _lastMsgId;
 
   /**
@@ -40,7 +42,7 @@ class MTProtoState {
     this.authKey = authKey;
     this._log = loggers;
     this.timeOffset = 0;
-    this.salt = 0;
+    this.salt = BigInt.zero;
 
     this.id = this.sequence = this._lastMsgId = null;
     this.reset();
@@ -93,7 +95,7 @@ class MTProtoState {
     final msgId = this.getNewMsgId();
     final seqNo = this._getSeqNo(contentRelated);
     var body;
-    if (!afterId) {
+    if (afterId!=true) {
       body = GZIPPacked.gzipIfSmaller(contentRelated, data);
     } else {
       throw ("Not needed for now!");
@@ -120,7 +122,7 @@ class MTProtoState {
     final padding = generateRandomBytes((-(data.length + 12) % 16) + 12);
     // Being substr(what, offset, length); x = 0 for client
     // "msg_key_large = SHA256(substr(auth_key, 88+x, 32) + pt + padding)"
-    final List<int> msgKeyLarge = sha256.convert(this.authKey.getKey().slice(88, 88 + 32) + data + padding).bytes;
+    final List<int> msgKeyLarge = sha256.convert(this.authKey.getKey().sublist(88, 88 + 32) + data + padding).bytes;
     // "msg_key = substr (msg_key_large, 8, 16)"
     final List<int> msgKey = msgKeyLarge.sublist(8, 24);
 
@@ -128,7 +130,7 @@ class MTProtoState {
     final List<int> key = result[0];
     final List<int> iv = result[1];
     final keyId = readBufferFromBigInt(this.authKey.keyId, 8);
-    return [keyId, msgKey, IGE.encryptIge(data + padding, key, iv)].expand((element) => element);
+    return [keyId, msgKey, IGE.encryptIge(data + padding, key, iv)].expand((element) => element).toList();
   }
 
   /**
@@ -156,9 +158,8 @@ class MTProtoState {
     // https://core.telegram.org/mtproto/security_guidelines
     // Sections "checking sha256 hash" and "message length"
 
-    final ourKey = sha256.convert(([this.authKey.getKey().slice(96, 96 + 32), body].expand((element) => element))).bytes;
-
-    if (msgKey != (ourKey.sublist(8, 24))) {
+    final ourKey = sha256.convert([this.authKey.getKey().sublist(96, 96 + 32), body].expand((element) => element).toList()).bytes;
+    if (!eq(msgKey,ourKey.sublist(8, 24))) {
       throw ("Received msg_key doesn't match with expected one");
     }
 
@@ -187,14 +188,17 @@ class MTProtoState {
    * @private
    */
   BigInt getNewMsgId() {
-    final now = DateTime.now().millisecond / 1000 + this.timeOffset;
+    final now = DateTime.now().millisecondsSinceEpoch / 1000 + this.timeOffset;
     final nanoseconds = ((now - now.floor()) * 1e9).floor();
-    BigInt newMsgId = (BigInt.from(now.floor()) << 32) | (BigInt.from(nanoseconds) << 2);
-    if (this._lastMsgId>=(newMsgId)) {
+    var a = BigInt.from(now.floor());
+    var c = BigInt.from(nanoseconds);
+    var newMsgId = (a<<32) | (c<<2);
+    if (this._lastMsgId>=newMsgId) {
       newMsgId = this._lastMsgId + BigInt.from(4);
     }
     this._lastMsgId = newMsgId;
     return newMsgId;
+
   }
 
   /**
@@ -202,13 +206,12 @@ class MTProtoState {
    * one given a known valid message ID.
    * @param correctMsgId {BigInteger}
    */
-  BigInt updateTimeOffset(correctMsgId) {
+  int updateTimeOffset(int correctMsgId) {
     final bad = this.getNewMsgId();
     final old = this.timeOffset;
-    final now = (DateTime.now().millisecondsSinceEpoch / 1000).floor();
+    final now =(DateTime.now().millisecondsSinceEpoch / 1000).floor();
     final correct = correctMsgId >> 32;
     this.timeOffset = correct - now;
-
     if (this.timeOffset != old) {
       this._lastMsgId = BigInt.zero;
       this._log.debug(

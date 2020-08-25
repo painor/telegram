@@ -3,6 +3,7 @@ import 'dart:core';
 import 'dart:math';
 import 'package:convert/convert.dart';
 import 'package:crypto/crypto.dart';
+import 'package:collection/collection.dart';
 
 BigInt readBigIntFromBuffer(List<int> buffer, {little: true, signed: false}) {
   final bytesNumber = buffer.length;
@@ -114,11 +115,12 @@ List<int> toSignedLittleBuffer(BigInt big, {int number: 8}) {
   }
   return byteArray;
 }
+Function eq = const ListEquality().equals;
 
 List<int> serializeBytes(dynamic data) {
   if (!(data is List<int>)) {
     if (data is String) {
-      data = utf8.decode(data) as List<int>;
+      data = utf8.encode(data);
     } else {
       throw ("Bytes or str expected, not ${data.runtimeType}");
     }

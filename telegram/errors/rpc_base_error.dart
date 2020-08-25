@@ -15,7 +15,7 @@ class RPCError implements Exception {
   static _fmtRequest(request) {
 // TODO fix this
     if (request) {
-      return '(caused by ${request.className})';
+      return '(caused by ${request.runtimeType})';
     } else {
       return '';
     }

@@ -4,6 +4,8 @@ import '../../extensions/binary_reader.dart';
 class AppUpdate {
     static const CONSTRUCTOR_ID = 497489295;
     static const SUBCLASS_OF_ID = 1486292638;
+    final classType = "constructor";
+    final ID = 497489295;
 	bool canNotSkip;
 	int id;
 	String version;
@@ -22,13 +24,15 @@ List<dynamic> entities = [];len = reader.readInt();
 		entities.add(reader.tgReadObject());
 }var document;if ((flags & 2)==1){var document = reader.tgReadObject(); } else {document=null;}var url;if ((flags & 4)==1){var url = reader.tgReadString(); } else {url=null;}		return new AppUpdate(canNotSkip : canNotSkip, id : id, version : version, text : text, entities : entities, document : document, url : url);
 	}
-	List<int> getBytes(){return [readBufferFromBigInt(497489295,4),[0,0,0,0],readBufferFromBigInt(this.id,4,little:true,signed:true),serializeBytes(this.version),serializeBytes(this.text),readBufferFromBigInt(0x15c4b51c,4),readBufferFromBigInt(this.entities.length,4,little:true,signed:true),this.entities.map((x)=>x.getBytes()),(this.document==null||this.document==false)?[]:[this.document.getBytes()],(this.url==null||this.url==false)?[]:[serializeBytes(this.url)],].expand((element) => element).toList();}
+	List<int> getBytes(){return [readBufferFromBigInt(497489295,4),[0,0,0,0],readBufferFromBigInt(this.id,4,little:true,signed:true),serializeBytes(this.version),serializeBytes(this.text),readBufferFromBigInt(0x15c4b51c,4,little:false,signed:false),readBufferFromBigInt(this.entities.length,4,little:true,signed:true),this.entities.map((x)=>(x.getBytes() as List<int>)).expand((element) => element),(this.document==null||this.document==false)?new List<int>():[(this.document.getBytes() as List<int>)].expand((element) => element).toList(),(this.url==null||this.url==false)?new List<int>():[serializeBytes(this.url)].expand((element) => element).toList(),].expand((element) => element).toList();}
 
 }
 
 class NoAppUpdate {
     static const CONSTRUCTOR_ID = 3294258486;
     static const SUBCLASS_OF_ID = 1486292638;
+    final classType = "constructor";
+    final ID = 3294258486;
 
 
 	NoAppUpdate();
@@ -43,6 +47,8 @@ class NoAppUpdate {
 class InviteText {
     static const CONSTRUCTOR_ID = 415997816;
     static const SUBCLASS_OF_ID = 3480267317;
+    final classType = "constructor";
+    final ID = 415997816;
 	String message;
 
 
@@ -58,6 +64,8 @@ class InviteText {
 class Support {
     static const CONSTRUCTOR_ID = 398898678;
     static const SUBCLASS_OF_ID = 1901706475;
+    final classType = "constructor";
+    final ID = 398898678;
 	String phoneNumber;
 	var user;
 
@@ -67,13 +75,15 @@ class Support {
 	static Support fromReader(BinaryReader reader) {
 	var temp,len;var phoneNumber = reader.tgReadString();var user = reader.tgReadObject();		return new Support(phoneNumber : phoneNumber, user : user);
 	}
-	List<int> getBytes(){return [readBufferFromBigInt(398898678,4),serializeBytes(this.phoneNumber),this.user.getBytes(),].expand((element) => element).toList();}
+	List<int> getBytes(){return [readBufferFromBigInt(398898678,4),serializeBytes(this.phoneNumber),(this.user.getBytes() as List<int>),].expand((element) => element).toList();}
 
 }
 
 class TermsOfService {
     static const CONSTRUCTOR_ID = 2013922064;
     static const SUBCLASS_OF_ID = 552502034;
+    final classType = "constructor";
+    final ID = 2013922064;
 	bool popup;
 	var id;
 	String text;
@@ -90,13 +100,15 @@ List<dynamic> entities = [];len = reader.readInt();
 		entities.add(reader.tgReadObject());
 }var minAgeConfirm;if ((flags & 2)==1){var minAgeConfirm = reader.readInt(); } else {minAgeConfirm=null;}		return new TermsOfService(popup : popup, id : id, text : text, entities : entities, minAgeConfirm : minAgeConfirm);
 	}
-	List<int> getBytes(){return [readBufferFromBigInt(2013922064,4),[0,0,0,0],this.id.getBytes(),serializeBytes(this.text),readBufferFromBigInt(0x15c4b51c,4),readBufferFromBigInt(this.entities.length,4,little:true,signed:true),this.entities.map((x)=>x.getBytes()),(this.minAgeConfirm==null||this.minAgeConfirm==false)?[]:[readBufferFromBigInt(this.minAgeConfirm,4,little:true,signed:true)],].expand((element) => element).toList();}
+	List<int> getBytes(){return [readBufferFromBigInt(2013922064,4),[0,0,0,0],(this.id.getBytes() as List<int>),serializeBytes(this.text),readBufferFromBigInt(0x15c4b51c,4,little:false,signed:false),readBufferFromBigInt(this.entities.length,4,little:true,signed:true),this.entities.map((x)=>(x.getBytes() as List<int>)).expand((element) => element),(this.minAgeConfirm==null||this.minAgeConfirm==false)?new List<int>():[readBufferFromBigInt(this.minAgeConfirm,4,little:true,signed:true)].expand((element) => element).toList(),].expand((element) => element).toList();}
 
 }
 
 class RecentMeUrls {
     static const CONSTRUCTOR_ID = 235081943;
     static const SUBCLASS_OF_ID = 4067017847;
+    final classType = "constructor";
+    final ID = 235081943;
 	List<dynamic> urls;
 	List<dynamic> chats;
 	List<dynamic> users;
@@ -119,13 +131,15 @@ List<dynamic> users = [];len = reader.readInt();
 		users.add(reader.tgReadObject());
 }		return new RecentMeUrls(urls : urls, chats : chats, users : users);
 	}
-	List<int> getBytes(){return [readBufferFromBigInt(235081943,4),readBufferFromBigInt(0x15c4b51c,4),readBufferFromBigInt(this.urls.length,4,little:true,signed:true),this.urls.map((x)=>x.getBytes()),readBufferFromBigInt(0x15c4b51c,4),readBufferFromBigInt(this.chats.length,4,little:true,signed:true),this.chats.map((x)=>x.getBytes()),readBufferFromBigInt(0x15c4b51c,4),readBufferFromBigInt(this.users.length,4,little:true,signed:true),this.users.map((x)=>x.getBytes()),].expand((element) => element).toList();}
+	List<int> getBytes(){return [readBufferFromBigInt(235081943,4),readBufferFromBigInt(0x15c4b51c,4,little:false,signed:false),readBufferFromBigInt(this.urls.length,4,little:true,signed:true),this.urls.map((x)=>(x.getBytes() as List<int>)).expand((element) => element),readBufferFromBigInt(0x15c4b51c,4,little:false,signed:false),readBufferFromBigInt(this.chats.length,4,little:true,signed:true),this.chats.map((x)=>(x.getBytes() as List<int>)).expand((element) => element),readBufferFromBigInt(0x15c4b51c,4,little:false,signed:false),readBufferFromBigInt(this.users.length,4,little:true,signed:true),this.users.map((x)=>(x.getBytes() as List<int>)).expand((element) => element),].expand((element) => element).toList();}
 
 }
 
 class ProxyDataEmpty {
     static const CONSTRUCTOR_ID = 3768459192;
     static const SUBCLASS_OF_ID = 568501320;
+    final classType = "constructor";
+    final ID = 3768459192;
 	int expires;
 
 
@@ -141,6 +155,8 @@ class ProxyDataEmpty {
 class ProxyDataPromo {
     static const CONSTRUCTOR_ID = 737668643;
     static const SUBCLASS_OF_ID = 568501320;
+    final classType = "constructor";
+    final ID = 737668643;
 	int expires;
 	var peer;
 	List<dynamic> chats;
@@ -160,13 +176,15 @@ List<dynamic> users = [];len = reader.readInt();
 		users.add(reader.tgReadObject());
 }		return new ProxyDataPromo(expires : expires, peer : peer, chats : chats, users : users);
 	}
-	List<int> getBytes(){return [readBufferFromBigInt(737668643,4),readBufferFromBigInt(this.expires,4,little:true,signed:true),this.peer.getBytes(),readBufferFromBigInt(0x15c4b51c,4),readBufferFromBigInt(this.chats.length,4,little:true,signed:true),this.chats.map((x)=>x.getBytes()),readBufferFromBigInt(0x15c4b51c,4),readBufferFromBigInt(this.users.length,4,little:true,signed:true),this.users.map((x)=>x.getBytes()),].expand((element) => element).toList();}
+	List<int> getBytes(){return [readBufferFromBigInt(737668643,4),readBufferFromBigInt(this.expires,4,little:true,signed:true),(this.peer.getBytes() as List<int>),readBufferFromBigInt(0x15c4b51c,4,little:false,signed:false),readBufferFromBigInt(this.chats.length,4,little:true,signed:true),this.chats.map((x)=>(x.getBytes() as List<int>)).expand((element) => element),readBufferFromBigInt(0x15c4b51c,4,little:false,signed:false),readBufferFromBigInt(this.users.length,4,little:true,signed:true),this.users.map((x)=>(x.getBytes() as List<int>)).expand((element) => element),].expand((element) => element).toList();}
 
 }
 
 class TermsOfServiceUpdateEmpty {
     static const CONSTRUCTOR_ID = 3811614591;
     static const SUBCLASS_OF_ID = 691808631;
+    final classType = "constructor";
+    final ID = 3811614591;
 	int expires;
 
 
@@ -182,6 +200,8 @@ class TermsOfServiceUpdateEmpty {
 class TermsOfServiceUpdate {
     static const CONSTRUCTOR_ID = 686618977;
     static const SUBCLASS_OF_ID = 691808631;
+    final classType = "constructor";
+    final ID = 686618977;
 	int expires;
 	var termsOfService;
 
@@ -191,13 +211,15 @@ class TermsOfServiceUpdate {
 	static TermsOfServiceUpdate fromReader(BinaryReader reader) {
 	var temp,len;var expires = reader.readInt();var termsOfService = reader.tgReadObject();		return new TermsOfServiceUpdate(expires : expires, termsOfService : termsOfService);
 	}
-	List<int> getBytes(){return [readBufferFromBigInt(686618977,4),readBufferFromBigInt(this.expires,4,little:true,signed:true),this.termsOfService.getBytes(),].expand((element) => element).toList();}
+	List<int> getBytes(){return [readBufferFromBigInt(686618977,4),readBufferFromBigInt(this.expires,4,little:true,signed:true),(this.termsOfService.getBytes() as List<int>),].expand((element) => element).toList();}
 
 }
 
 class DeepLinkInfoEmpty {
     static const CONSTRUCTOR_ID = 1722786150;
     static const SUBCLASS_OF_ID = 2555030584;
+    final classType = "constructor";
+    final ID = 1722786150;
 
 
 	DeepLinkInfoEmpty();
@@ -212,6 +234,8 @@ class DeepLinkInfoEmpty {
 class DeepLinkInfo {
     static const CONSTRUCTOR_ID = 1783556146;
     static const SUBCLASS_OF_ID = 2555030584;
+    final classType = "constructor";
+    final ID = 1783556146;
 	bool updateApp;
 	String message;
 	List<dynamic> entities;
@@ -226,13 +250,15 @@ List<dynamic> entities = [];len = reader.readInt();
 		entities.add(reader.tgReadObject());
 } } else {entities=null;}		return new DeepLinkInfo(updateApp : updateApp, message : message, entities : entities);
 	}
-	List<int> getBytes(){return [readBufferFromBigInt(1783556146,4),[0,0,0,0],serializeBytes(this.message),(this.entities==null||this.entities==false)?[]:[readBufferFromBigInt(0x15c4b51c,4),readBufferFromBigInt(this.entities.length,4,little:true,signed:true),this.entities.map((x)=>x.getBytes())],].expand((element) => element).toList();}
+	List<int> getBytes(){return [readBufferFromBigInt(1783556146,4),[0,0,0,0],serializeBytes(this.message),(this.entities==null||this.entities==false)?new List<int>():[readBufferFromBigInt(0x15c4b51c,4,little:false,signed:false),readBufferFromBigInt(this.entities.length,4,little:true,signed:true),this.entities.map((x)=>(x.getBytes() as List<int>)).expand((element) => element)].expand((element) => element).toList(),].expand((element) => element).toList();}
 
 }
 
 class PassportConfigNotModified {
     static const CONSTRUCTOR_ID = 3216634967;
     static const SUBCLASS_OF_ID = 3328622765;
+    final classType = "constructor";
+    final ID = 3216634967;
 
 
 	PassportConfigNotModified();
@@ -247,6 +273,8 @@ class PassportConfigNotModified {
 class PassportConfig {
     static const CONSTRUCTOR_ID = 2694370991;
     static const SUBCLASS_OF_ID = 3328622765;
+    final classType = "constructor";
+    final ID = 2694370991;
 	int hash;
 	var countriesLangs;
 
@@ -256,13 +284,15 @@ class PassportConfig {
 	static PassportConfig fromReader(BinaryReader reader) {
 	var temp,len;var hash = reader.readInt();var countriesLangs = reader.tgReadObject();		return new PassportConfig(hash : hash, countriesLangs : countriesLangs);
 	}
-	List<int> getBytes(){return [readBufferFromBigInt(2694370991,4),readBufferFromBigInt(this.hash,4,little:true,signed:true),this.countriesLangs.getBytes(),].expand((element) => element).toList();}
+	List<int> getBytes(){return [readBufferFromBigInt(2694370991,4),readBufferFromBigInt(this.hash,4,little:true,signed:true),(this.countriesLangs.getBytes() as List<int>),].expand((element) => element).toList();}
 
 }
 
 class SupportName {
     static const CONSTRUCTOR_ID = 2349199817;
     static const SUBCLASS_OF_ID = 2135996354;
+    final classType = "constructor";
+    final ID = 2349199817;
 	String name;
 
 
@@ -278,6 +308,8 @@ class SupportName {
 class UserInfoEmpty {
     static const CONSTRUCTOR_ID = 4088278765;
     static const SUBCLASS_OF_ID = 1548998616;
+    final classType = "constructor";
+    final ID = 4088278765;
 
 
 	UserInfoEmpty();
@@ -292,6 +324,8 @@ class UserInfoEmpty {
 class UserInfo {
     static const CONSTRUCTOR_ID = 32192344;
     static const SUBCLASS_OF_ID = 1548998616;
+    final classType = "constructor";
+    final ID = 32192344;
 	String message;
 	List<dynamic> entities;
 	String author;
@@ -307,13 +341,15 @@ List<dynamic> entities = [];len = reader.readInt();
 		entities.add(reader.tgReadObject());
 }var author = reader.tgReadString();var date = reader.readInt();		return new UserInfo(message : message, entities : entities, author : author, date : date);
 	}
-	List<int> getBytes(){return [readBufferFromBigInt(32192344,4),serializeBytes(this.message),readBufferFromBigInt(0x15c4b51c,4),readBufferFromBigInt(this.entities.length,4,little:true,signed:true),this.entities.map((x)=>x.getBytes()),serializeBytes(this.author),readBufferFromBigInt(this.date,4,little:true,signed:true),].expand((element) => element).toList();}
+	List<int> getBytes(){return [readBufferFromBigInt(32192344,4),serializeBytes(this.message),readBufferFromBigInt(0x15c4b51c,4,little:false,signed:false),readBufferFromBigInt(this.entities.length,4,little:true,signed:true),this.entities.map((x)=>(x.getBytes() as List<int>)).expand((element) => element),serializeBytes(this.author),readBufferFromBigInt(this.date,4,little:true,signed:true),].expand((element) => element).toList();}
 
 }
 
 class ConfigSimple {
     static const CONSTRUCTOR_ID = 1515793004;
     static const SUBCLASS_OF_ID = 689453764;
+    final classType = "constructor";
+    final ID = 1515793004;
 	int date;
 	int expires;
 	List<dynamic> rules;
@@ -327,6 +363,6 @@ class ConfigSimple {
 		rules.add(reader.tgReadObject());
 }		return new ConfigSimple(date : date, expires : expires, rules : rules);
 	}
-	List<int> getBytes(){return [readBufferFromBigInt(1515793004,4),readBufferFromBigInt(this.date,4,little:true,signed:true),readBufferFromBigInt(this.expires,4,little:true,signed:true),readBufferFromBigInt(this.rules.length,4,little:true,signed:true),this.rules.map((x)=>x.getBytes()),].expand((element) => element).toList();}
+	List<int> getBytes(){return [readBufferFromBigInt(1515793004,4),readBufferFromBigInt(this.date,4,little:true,signed:true),readBufferFromBigInt(this.expires,4,little:true,signed:true),readBufferFromBigInt(this.rules.length,4,little:true,signed:true),this.rules.map((x)=>(x.getBytes() as List<int>)).expand((element) => element),].expand((element) => element).toList();}
 
 }

@@ -26,14 +26,18 @@ class MessagePacker {
 
   void append(state) {
     this._queue.add(state);
-    this._ready.complete(true);
+    if (!this._ready.isCompleted) {
+      this._ready.complete(true);
+    }
   }
 
   void extend(states) {
     for (final state in states) {
       this._queue.add(state);
     }
-    this._ready.complete(true);
+    if (!this._ready.isCompleted) {
+      this._ready.complete(true);
+    }
   }
 
   get() async {
@@ -41,7 +45,7 @@ class MessagePacker {
       this._ready = new Completer<bool>();
       await this._ready.future;
     }
-    if (this._queue.length>0 && this._queue[this._queue.length - 1] == false) {
+    if (this._queue.length > 0 && this._queue[this._queue.length - 1] == false) {
       this._queue = [];
       return;
     }
@@ -53,10 +57,11 @@ class MessagePacker {
 
     while (this._queue.length > 0 && batch.length <= MessageContainer.MAXIMUM_LENGTH) {
       final state = this._queue.removeAt(0);
+
       size += state.data.length + TLMessage.SIZE_OVERHEAD;
       if (size <= MessageContainer.MAXIMUM_SIZE) {
         var afterId;
-        if (state.after) {
+        if (state.after != null) {
           afterId = state.after.msgId;
         }
         state.msgId = await this._state.writeDataAsMessage(
@@ -65,7 +70,7 @@ class MessagePacker {
               state.request.classType == 'request',
               afterId,
             );
-        this._log.debug('Assigned msgId = ${state.msgId} to ${state.request.className || state.request.constructor.name}');
+        this._log.debug('Assigned msgId = ${state.msgId} to ${state.request.runtimeType}');
         batch.add(state);
         continue;
       }
@@ -73,8 +78,7 @@ class MessagePacker {
         this._queue.insert(0, state);
         break;
       }
-      this._log.warn(
-          'Message payload for ${state.request.className || state.request.constructor.name} is too long ${state.data.length} and cannot be sent');
+      this._log.warn('Message payload for ${state.request.runtimeType} is too long ${state.data.length} and cannot be sent');
       state.promise.reject('Request Payload is too big');
       size = 0;
       continue;
@@ -83,10 +87,11 @@ class MessagePacker {
       return null;
     }
     if (batch.length > 1) {
-      final b =
-          [readBufferFromBigInt(MessageContainer.CONSTRUCTOR_ID, 4), readBufferFromBigInt(batch.length, 4)].expand((element) => element);
+      final b = [readBufferFromBigInt(MessageContainer.CONSTRUCTOR_ID, 4), readBufferFromBigInt(batch.length, 4)]
+          .expand((element) => element)
+          .toList();
 
-      data = [b, buffer.getValue()].expand((element) => element);
+      data = [b, buffer.getValue()].expand((element) => element).toList();
       buffer = new BinaryWriter(new List());
       final containerId = await this._state.writeDataAsMessage(
             buffer,

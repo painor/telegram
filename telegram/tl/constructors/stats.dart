@@ -4,6 +4,8 @@ import '../../extensions/binary_reader.dart';
 class BroadcastStats {
     static const CONSTRUCTOR_ID = 3187114900;
     static const SUBCLASS_OF_ID = 2146587688;
+    final classType = "constructor";
+    final ID = 3187114900;
 	var period;
 	var followers;
 	var viewsPerPost;
@@ -30,6 +32,6 @@ List<dynamic> recentMessageInteractions = [];len = reader.readInt();
 		recentMessageInteractions.add(reader.tgReadObject());
 }		return new BroadcastStats(period : period, followers : followers, viewsPerPost : viewsPerPost, sharesPerPost : sharesPerPost, enabledNotifications : enabledNotifications, growthGraph : growthGraph, followersGraph : followersGraph, muteGraph : muteGraph, topHoursGraph : topHoursGraph, interactionsGraph : interactionsGraph, ivInteractionsGraph : ivInteractionsGraph, viewsBySourceGraph : viewsBySourceGraph, newFollowersBySourceGraph : newFollowersBySourceGraph, languagesGraph : languagesGraph, recentMessageInteractions : recentMessageInteractions);
 	}
-	List<int> getBytes(){return [readBufferFromBigInt(3187114900,4),this.period.getBytes(),this.followers.getBytes(),this.viewsPerPost.getBytes(),this.sharesPerPost.getBytes(),this.enabledNotifications.getBytes(),this.growthGraph.getBytes(),this.followersGraph.getBytes(),this.muteGraph.getBytes(),this.topHoursGraph.getBytes(),this.interactionsGraph.getBytes(),this.ivInteractionsGraph.getBytes(),this.viewsBySourceGraph.getBytes(),this.newFollowersBySourceGraph.getBytes(),this.languagesGraph.getBytes(),readBufferFromBigInt(0x15c4b51c,4),readBufferFromBigInt(this.recentMessageInteractions.length,4,little:true,signed:true),this.recentMessageInteractions.map((x)=>x.getBytes()),].expand((element) => element).toList();}
+	List<int> getBytes(){return [readBufferFromBigInt(3187114900,4),(this.period.getBytes() as List<int>),(this.followers.getBytes() as List<int>),(this.viewsPerPost.getBytes() as List<int>),(this.sharesPerPost.getBytes() as List<int>),(this.enabledNotifications.getBytes() as List<int>),(this.growthGraph.getBytes() as List<int>),(this.followersGraph.getBytes() as List<int>),(this.muteGraph.getBytes() as List<int>),(this.topHoursGraph.getBytes() as List<int>),(this.interactionsGraph.getBytes() as List<int>),(this.ivInteractionsGraph.getBytes() as List<int>),(this.viewsBySourceGraph.getBytes() as List<int>),(this.newFollowersBySourceGraph.getBytes() as List<int>),(this.languagesGraph.getBytes() as List<int>),readBufferFromBigInt(0x15c4b51c,4,little:false,signed:false),readBufferFromBigInt(this.recentMessageInteractions.length,4,little:true,signed:true),this.recentMessageInteractions.map((x)=>(x.getBytes() as List<int>)).expand((element) => element),].expand((element) => element).toList();}
 
 }

@@ -4,6 +4,8 @@ import '../../extensions/binary_reader.dart';
 class FileUnknown {
     static const CONSTRUCTOR_ID = 2861972229;
     static const SUBCLASS_OF_ID = 4087473907;
+    final classType = "constructor";
+    final ID = 2861972229;
 
 
 	FileUnknown();
@@ -18,6 +20,8 @@ class FileUnknown {
 class FilePartial {
     static const CONSTRUCTOR_ID = 1086091090;
     static const SUBCLASS_OF_ID = 4087473907;
+    final classType = "constructor";
+    final ID = 1086091090;
 
 
 	FilePartial();
@@ -32,6 +36,8 @@ class FilePartial {
 class FileJpeg {
     static const CONSTRUCTOR_ID = 8322574;
     static const SUBCLASS_OF_ID = 4087473907;
+    final classType = "constructor";
+    final ID = 8322574;
 
 
 	FileJpeg();
@@ -46,6 +52,8 @@ class FileJpeg {
 class FileGif {
     static const CONSTRUCTOR_ID = 3403786975;
     static const SUBCLASS_OF_ID = 4087473907;
+    final classType = "constructor";
+    final ID = 3403786975;
 
 
 	FileGif();
@@ -60,6 +68,8 @@ class FileGif {
 class FilePng {
     static const CONSTRUCTOR_ID = 172975040;
     static const SUBCLASS_OF_ID = 4087473907;
+    final classType = "constructor";
+    final ID = 172975040;
 
 
 	FilePng();
@@ -74,6 +84,8 @@ class FilePng {
 class FilePdf {
     static const CONSTRUCTOR_ID = 2921222285;
     static const SUBCLASS_OF_ID = 4087473907;
+    final classType = "constructor";
+    final ID = 2921222285;
 
 
 	FilePdf();
@@ -88,6 +100,8 @@ class FilePdf {
 class FileMp3 {
     static const CONSTRUCTOR_ID = 1384777335;
     static const SUBCLASS_OF_ID = 4087473907;
+    final classType = "constructor";
+    final ID = 1384777335;
 
 
 	FileMp3();
@@ -102,6 +116,8 @@ class FileMp3 {
 class FileMov {
     static const CONSTRUCTOR_ID = 1258941372;
     static const SUBCLASS_OF_ID = 4087473907;
+    final classType = "constructor";
+    final ID = 1258941372;
 
 
 	FileMov();
@@ -116,6 +132,8 @@ class FileMov {
 class FileMp4 {
     static const CONSTRUCTOR_ID = 3016663268;
     static const SUBCLASS_OF_ID = 4087473907;
+    final classType = "constructor";
+    final ID = 3016663268;
 
 
 	FileMp4();
@@ -130,6 +148,8 @@ class FileMp4 {
 class FileWebp {
     static const CONSTRUCTOR_ID = 276907596;
     static const SUBCLASS_OF_ID = 4087473907;
+    final classType = "constructor";
+    final ID = 276907596;
 
 
 	FileWebp();

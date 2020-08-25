@@ -11,7 +11,6 @@ import '../utils.dart';
 import 'MTProto_plain_sender.dart';
 import 'MTProto_state.dart';
 import 'authenticator.dart';
-import 'connection/connection.dart';
 import '../tl/constructors/constructors.dart';
 import 'request_state.dart';
 import '../tl/constructors/upload.dart';
@@ -32,10 +31,10 @@ import '../tl/requests/auth.dart';
  */
 class MTProtoSender {
   Map<int, dynamic> _handlers;
-  Set _pendingAck;
+  Set<BigInt> _pendingAck;
   List _lastAcks;
   MessagePacker _sendQueue;
-  Map<int, dynamic> _pendingState;
+  Map<BigInt, dynamic> _pendingState;
   MTProtoState _state;
   Logger _log;
   AuthKey authKey;
@@ -292,7 +291,7 @@ class MTProtoSender {
 
     while (this._userConnected && !this._reconnecting) {
       if (this._pendingAck.length > 0) {
-        final ack = new RequestState(new MsgsAck(msgIds: this._pendingAck.expand((element) => element)));
+        final ack = new RequestState(new MsgsAck(msgIds: this._pendingAck.toList()));
         this._sendQueue.append(ack);
         this._lastAcks.add(ack);
         this._pendingAck.clear();
@@ -306,24 +305,22 @@ class MTProtoSender {
       if (this._reconnecting) {
         return;
       }
-    print("res is $res");
       if (res==null) {
         continue;
       }
-      var data = res.data;
-      final batch = res.batch;
+      var data = res['data'];
+      final batch = res['batch'];
       this._log.debug('Encrypting ${batch.length} message(s) in ${data.length}  bytes for sending');
       data = await this._state.encryptMessageData(data);
 
       try {
         await this._connection.send(data);
       } catch (e) {
-        this._log.error(e);
+        this._log.error(e.toString());
         this._log.info('Connection closed while sending data');
         return;
       }
       for (final state in batch) {
-        print(state.runtimeType);
         if (!(state.runtimeType == Iterable)) {
           if (state.request.classType == 'request') {
             this._pendingState[state.msgId] = state;
@@ -357,7 +354,7 @@ class MTProtoSender {
       }
       try {
         message = await this._state.decryptMessageData(body);
-      } catch (e) {
+      } catch (e,stackTrace) {
         if (e is TypeNotFoundError) {
 // Received object which we don't know how to deserialize
           this._log.info('Type ${e.invalidConstructorId} not found, remaining data ${e.remaining}');
@@ -391,16 +388,20 @@ class MTProtoSender {
           return;
         } else {
           this._log.error('Unhandled error while receiving data');
-          this._log.error(e);
-          this._startReconnect();
+          print(stackTrace);
+
+          this._log.error(e.toString());
+          //this._startReconnect();
+
           return;
         }
       }
       try {
         await this._processMessage(message);
-      } catch (e) {
+      } catch (e,stacktrace) {
+        print(stacktrace);
         this._log.error('Unhandled error while receiving data');
-        this._log.error(e);
+        this._log.error(e.toString());
       }
     }
   }
@@ -419,8 +420,8 @@ class MTProtoSender {
     this._pendingAck.add(message.msgId);
 // eslint-disable-next-line require-atomic-updates
     message.obj = await message.obj;
-    var handler = this._handlers[message.obj.CONSTRUCTOR_ID];
-    if (!handler) {
+    var handler = this._handlers[message.obj.ID];
+    if (handler==null) {
       handler = this._handleUpdate;
     }
 
@@ -436,7 +437,7 @@ class MTProtoSender {
    */
   _popStates(msgId) {
     var state = this._pendingState[msgId];
-    if (state) {
+    if (state!=null) {
       this._pendingState.remove(msgId);
       return [state];
     }
@@ -477,13 +478,16 @@ class MTProtoSender {
    */
   _handleRPCResult(message) {
     final RPCResult = message.obj;
-    final state = this._pendingState[RPCResult.reqMsgId];
-    if (state) {
+    if (RPCResult.error!=null){
+      print(RPCResult.error);
+    }
+    final RequestState state = this._pendingState[RPCResult.reqMsgId];
+
+    if (state!=null) {
       this._pendingState.remove([RPCResult.reqMsgId]);
     }
     this._log.debug('Handling RPC result for message ${RPCResult.reqMsgId}');
-
-    if (!state) {
+    if (state==null) {
 // TODO We should not get responses to things we never sent
 // However receiving a File() with empty bytes is "common".
 // See #658, #759 and #958. They seem to happen in a container
@@ -493,25 +497,28 @@ class MTProtoSender {
         if (!(reader.tgReadObject() is File)) {
           throw ('Not an upload.File');
         }
-      } catch (e) {
-        this._log.error(e);
+      } catch (e,stacktrace) {
+        print(e);
+        this._log.error(e.toString());
         if (e is TypeNotFoundError) {
           this._log.info('Received response without parent request: ${RPCResult.body}');
           return;
         } else {
+          print(stacktrace);
           throw e;
         }
       }
     }
-    if (RPCResult.error) {
+
+    if (RPCResult.error!=null) {
 // eslint-disable-next-line new-cap
       final error = RPCMessageToError(RPCResult.error, state.request);
       this._sendQueue.append(new RequestState(new MsgsAck(msgIds: [state.msgId])));
-      state.reject(error);
+      state.future.completeError(error);
     } else {
       final reader = new BinaryReader(RPCResult.body);
       final read = state.request.readResult(reader);
-      state.resolve(read);
+      state.future.complete(read);
     }
   }
 
@@ -546,10 +553,10 @@ class MTProtoSender {
   _handleUpdate(message) async {
     if (message.obj.SUBCLASS_OF_ID != 0x8af52aac) {
 // crc32(b'Updates')
-      this._log.warn('Note: ${message.obj.className} is not an update, not dispatching it');
+      this._log.warn('Note: ${message.obj.runtimeType} is not an update, not dispatching it');
       return;
     }
-    this._log.debug('Handling update ' + message.obj.className);
+    this._log.debug('Handling update ${message.obj.runtimeType}');
     if (this._updateCallback) {
       this._updateCallback(message.obj);
     }
@@ -570,8 +577,8 @@ class MTProtoSender {
     this._pendingState.remove(pong.msgId);
 
 // Todo Check result
-    if (state) {
-      state.resolve(pong);
+    if (state!=null) {
+      state.future.complete(pong);
     }
   }
 
@@ -590,7 +597,7 @@ class MTProtoSender {
     this._state.salt = badSalt.newServerSalt;
     final states = this._popStates(badSalt.badMsgId);
     this._sendQueue.extend(states);
-    this._log.debug('${states.length} message(s)        will be resent');
+    this._log.debug('${states.length} message(s) will be resent');
   }
 
   /**
@@ -697,9 +704,9 @@ class MTProtoSender {
     this._log.debug('Handling acknowledge for ${ack.msgIds}');
     for (final msgId in ack.msgIds) {
       final state = this._pendingState[msgId];
-      if (state && state.request is LogOut) {
+      if (state!=null && state.request is LogOut) {
         this._pendingState.remove(msgId);
-        state.resolve(true);
+        state.future.complete(true);
       }
     }
   }

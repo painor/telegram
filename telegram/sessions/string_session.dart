@@ -19,7 +19,7 @@ class StringSession extends MemorySession {
    * @param session {string|null}
    */
   StringSession({session: null}) {
-    if (session!= null) {
+    if (session != null) {
       if (session[0] != CURRENT_VERSION) {
         throw ('Not a valid string');
       }
@@ -27,14 +27,12 @@ class StringSession extends MemorySession {
   }
 
   getAuthKey(dcId) {
-
     return this.authKey;
   }
 
   setAuthKey(authKey, dcId) {
-
     this.authKey = authKey;
   }
 
-  load() async{}
+  load() async {}
 }

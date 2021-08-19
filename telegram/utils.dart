@@ -5,12 +5,12 @@ import 'package:convert/convert.dart';
 import 'package:crypto/crypto.dart';
 import 'package:collection/collection.dart';
 
-BigInt readBigIntFromBuffer(List<int> buffer, {little: true, signed: false}) {
+BigInt readBigIntFromBuffer(List<int?> buffer, {little: true, signed: false}) {
   final bytesNumber = buffer.length;
   if (little) {
     buffer = buffer.reversed.toList();
   }
-  BigInt bigInt = BigInt.parse(hex.encode(buffer), radix: 16);
+  BigInt bigInt = BigInt.parse(hex.encode(buffer as List<int>), radix: 16);
   if (signed && (bigInt.toRadixString(2).length / 8).floor() >= bytesNumber) {
     BigInt lesser = BigInt.two.pow(bytesNumber * 8);
     bigInt = bigInt - lesser;
@@ -21,12 +21,29 @@ BigInt readBigIntFromBuffer(List<int> buffer, {little: true, signed: false}) {
 Map<String, List<int>> generateKeyDataFromNonce(serverNonce, newNonce) {
   List<int> serverNonceList = toSignedLittleBuffer(serverNonce, number: 16);
   List<int> newNonceList = toSignedLittleBuffer(newNonce, number: 32);
-  final List<int> hash1 = sha1.convert([newNonceList, serverNonceList].expand((element) => element).toList()).bytes;
-  final List<int> hash2 = sha1.convert([serverNonceList, newNonceList].expand((element) => element).toList()).bytes;
-  final List<int> hash3 = sha1.convert([newNonceList, newNonceList].expand((element) => element).toList()).bytes;
+  final List<int> hash1 = sha1
+      .convert([newNonceList, serverNonceList]
+          .expand((element) => element)
+          .toList())
+      .bytes;
+  final List<int> hash2 = sha1
+      .convert([serverNonceList, newNonceList]
+          .expand((element) => element)
+          .toList())
+      .bytes;
+  final List<int> hash3 = sha1
+      .convert([newNonceList, newNonceList]
+          .expand((element) => element)
+          .toList())
+      .bytes;
 
-  final List<int> keyBuffer = [hash1, hash2.sublist(0, 12)].expand((element) => element).toList();
-  final List<int> ivBuffer = [hash2.sublist(12, 20), hash3, newNonceList.sublist(0, 4)].expand((element) => element).toList();
+  final List<int> keyBuffer =
+      [hash1, hash2.sublist(0, 12)].expand((element) => element).toList();
+  final List<int> ivBuffer = [
+    hash2.sublist(12, 20),
+    hash3,
+    newNonceList.sublist(0, 4)
+  ].expand((element) => element).toList();
   return {'key': keyBuffer, 'iv': ivBuffer};
 }
 
@@ -34,11 +51,12 @@ asyncSleep(duration) async {
   await Future.delayed(Duration(seconds: duration));
 }
 
-List<int> readBufferFromBigInt(bigInt, int bytesNumber, {bool little: true, bool signed: false}) {
+List<int> readBufferFromBigInt(bigInt, int bytesNumber,
+    {bool little: true, bool signed: false}) {
   if (!(bigInt is BigInt)) {
     bigInt = new BigInt.from(bigInt);
   }
-  final bitLength = bigInt.bitLength;
+  final dynamic bitLength = bigInt.bitLength;
   final bytes = (bitLength / 8).ceil();
   if (bytesNumber < bytes) {
     throw ('OverflowError: int too big to convert');
@@ -52,8 +70,9 @@ List<int> readBufferFromBigInt(bigInt, int bytesNumber, {bool little: true, bool
     bigInt = bigInt.abs();
   }
 
-  final hexNumber = bigInt.toRadixString(16).padLeft(bytesNumber * 2, '0');
-  var buffer = hex.decode(hexNumber);
+  final dynamic hexNumber =
+      bigInt.toRadixString(16).padLeft(bytesNumber * 2, '0');
+  List<int> buffer = hex.decode(hexNumber);
   if (little) {
     buffer = buffer.reversed.toList();
   }
@@ -92,7 +111,8 @@ List<int> generateRandomBytes(int count) {
 }
 
 BigInt generateRandomLong({signed: true}) {
-  return readBigIntFromBuffer(generateRandomBytes(8), little: true, signed: signed);
+  return readBigIntFromBuffer(generateRandomBytes(8),
+      little: true, signed: signed);
 }
 
 BigInt minBigInt(BigInt a, BigInt b) {
@@ -105,16 +125,18 @@ BigInt minBigInt(BigInt a, BigInt b) {
 List<int> getByteArray(BigInt integer, {signed: false}) {
   final int bits = integer.toRadixString(2).length;
   final int byteLength = ((bits + 8 - 1) / 8).floor();
-  return readBufferFromBigInt(integer, byteLength, little: false, signed: signed);
+  return readBufferFromBigInt(integer, byteLength,
+      little: false, signed: signed);
 }
 
-List<int> toSignedLittleBuffer(BigInt big, {int number: 8}) {
-  final byteArray = new List<int>(number);
+List<int> toSignedLittleBuffer(BigInt? big, {int number: 8}) {
+  final byteArray = new List<int>.filled(number, 0, growable: false);
   for (var i = 0; i < number; i++) {
-    byteArray[i] = ((big >> (8 * i)) & BigInt.from(255)).toInt();
+    byteArray[i] = ((big! >> (8 * i)) & BigInt.from(255)).toInt();
   }
   return byteArray;
 }
+
 Function eq = const ListEquality().equals;
 
 List<int> serializeBytes(dynamic data) {
@@ -126,7 +148,7 @@ List<int> serializeBytes(dynamic data) {
     }
   }
   final List<int> r = [];
-  int padding;
+  int? padding;
   if (data.length < 254) {
     padding = (data.length + 1) % 4;
     if (padding != 0) {
@@ -139,10 +161,15 @@ List<int> serializeBytes(dynamic data) {
     if (padding != 0) {
       padding = 4 - padding;
     }
-    r.addAll([254, data.length % 256 , (data.length >> 8) % 256 , (data.length >> 16) % 256]);
+    r.addAll([
+      254,
+      data.length % 256,
+      (data.length >> 8) % 256,
+      (data.length >> 16) % 256
+    ]);
     r.addAll(data);
   }
-  final s = new List<int>(padding);
+  final s = new List<int>.filled(padding, 0, growable: false);
   s.fillRange(0, padding, 0);
   r.addAll(s);
 

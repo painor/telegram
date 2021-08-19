@@ -1,9 +1,15 @@
 name: telegram
 version: 0.0.1
-dependencies:
-  convert: ^2.1.1
-  crclib: ^1.0.1
-  crypto: ^2.1.5
-  pointycastle:
-    git: git@github.com:bcgit/pc-dart.git
 
+environment:
+  sdk: '>=2.12.0 <3.0.0'
+
+dependencies:
+  convert: ^3.0.0
+  crclib:
+    git: https://github.com/google/crclib.dart.git
+  crypto: ^3.0.0
+  pointycastle: ^3.3.1
+
+dev_dependencies:
+  test: ^1.17.0

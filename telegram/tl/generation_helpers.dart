@@ -1,18 +1,26 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:crclib/catalog.dart';
 import 'package:crclib/crclib.dart';
 
 import '../utils.dart';
 
 String snakeToCamelCase(String name) {
-  final result = name.replaceAllMapped(new RegExp(r'(?:^|_)([a-z])'), (g) => g.group(1).toUpperCase());
+  final result = name.replaceAllMapped(
+      new RegExp(r'(?:^|_)([a-z])'), (g) => g.group(1)!.toUpperCase());
   return result.replaceAll(new RegExp(r'_'), '');
 }
 
 variableSnakeToCamelCase(String str) {
-  var s = str.replaceAllMapped(new RegExp(r'([-_][a-z])'), (group) => group.group(0).toUpperCase().replaceAll('-', '').replaceAll('_', ''));
-  if (["final","default"].contains(s)) {
+  var s = str.replaceAllMapped(
+      new RegExp(r'([-_][a-z])'),
+      (group) => group
+          .group(0)!
+          .toUpperCase()
+          .replaceAll('-', '')
+          .replaceAll('_', ''));
+  if (["final", "default"].contains(s)) {
     s += "Var";
   }
   return s;
@@ -44,7 +52,9 @@ final AUTH_KEY_TYPES = [
 ];
 
 fromLine(String line, bool isFunction) {
-  var matches = new RegExp(r'([\w.]+)(?:#([0-9a-fA-F]+))?(?:\s{?\w+:[\w\d<>#.?!]+}?)*\s=\s([\w\d<>#.?]+);$').allMatches(line);
+  var matches = new RegExp(
+          r'([\w.]+)(?:#([0-9a-fA-F]+))?(?:\s{?\w+:[\w\d<>#.?!]+}?)*\s=\s([\w\d<>#.?]+);$')
+      .allMatches(line);
   if (matches.length == 0) {
 // Probably "vector#1cb5c415 {t:Type} # [ t ] = Vector t;"
     throw ('Cannot parse TLObject ${line}');
@@ -55,9 +65,9 @@ fromLine(String line, bool isFunction) {
 
   final currentConfig = <String, dynamic>{
     'name': match[1],
-    'constructorId': match[2] != null ? int.parse(match[2], radix: 16) : null,
+    'constructorId': match[2] != null ? int.parse(match[2]!, radix: 16) : null,
     'argsConfig': new Map<String, dynamic>(),
-    'subclassOfId': Crc32Zlib().convert(utf8.encode(match.group(3))),
+    'subclassOfId': Crc32Xz().convert(utf8.encode(match.group(3)!)).toBigInt(),
     'result': match.group(3),
     'isFunction': isFunction,
     'namespace': null
@@ -68,22 +78,26 @@ fromLine(String line, bool isFunction) {
     var args;
 
     if (currentConfig['argsConfig'].length > 0) {
-      args = '${currentConfig['argsConfig'].keys.map((arg) => arg.toString()).join(' ')}';
+      args =
+          '${currentConfig['argsConfig'].keys.map((arg) => arg.toString()).join(' ')}';
     } else {
       args = '';
     }
 
-    final representation = '${currentConfig['name']}${hexId}${args} = ${currentConfig['result']}'
-        .replaceAllMapped(new RegExp(r'([:?])bytes'), (match) => match.group(0) + 'string')
-        .replaceAll('<', ' ')
-        .replaceAll(new RegExp(r'[>{}]'), '')
-        .replaceAll(new RegExp(r'\w+:flags\.\d+\?true'), '');
+    final representation =
+        '${currentConfig['name']}${hexId}${args} = ${currentConfig['result']}'
+            .replaceAllMapped(new RegExp(r'([:?])bytes'),
+                (match) => match.group(0)! + 'string')
+            .replaceAll('<', ' ')
+            .replaceAll(new RegExp(r'[>{}]'), '')
+            .replaceAll(new RegExp(r'\w+:flags\.\d+\?true'), '');
 
     if (currentConfig['name'] == 'inputMediaInvoice') {
       if (currentConfig['name'] == 'inputMediaInvoice') {}
     }
 
-    currentConfig['constructorId'] = Crc32Zlib().convert(utf8.encode(representation));
+    currentConfig['constructorId'] =
+        Crc32().convert(utf8.encode(representation));
   }
 
   argsMatch.forEach((element) {
@@ -92,12 +106,14 @@ fromLine(String line, bool isFunction) {
     var argType = element[3];
 
     if (brace == null) {
-      currentConfig['argsConfig'][variableSnakeToCamelCase(name)] = buildArgConfig(name, argType);
+      currentConfig['argsConfig'][variableSnakeToCamelCase(name!)] =
+          buildArgConfig(name, argType);
     }
   });
 
   if (currentConfig['name'].contains('.')) {
-    final res = new RegExp(r'(.+)\.(.+)').allMatches(currentConfig['name']).first;
+    final res =
+        new RegExp(r'(.+)\.(.+)').allMatches(currentConfig['name']).first;
     currentConfig['namespace'] = res.group(1);
     currentConfig['name'] = res.group(2);
   }
@@ -116,33 +132,35 @@ fromLine(String line, bool isFunction) {
 List<int> serializeBytes(data) {
   if (!(data is List<int>)) {
     if (data is String) {
-      data = utf8.decode(data);
+      data = utf8.decode(data as List<int>);
     } else {
       throw ("Bytes or str expected, not ${data.constructor.name}");
     }
   }
   final r = [];
-  int padding;
+  int? padding;
   if (data.length < 254) {
     padding = (data.length + 1) % 4;
     if (padding != 0) {
-      padding = 4 - padding;
+      padding = 4 - padding!;
     }
     r.add([data.length]);
     r.add(data);
   } else {
     padding = data.length % 4;
     if (padding != 0) {
-      padding = 4 - padding;
+      padding = 4 - padding!;
     }
-    r.add([254, data.length % 256 + (data.length >> 8) % 256 + (data.length >> 16) % 256]);
+    r.add([
+      254,
+      data.length % 256 + (data.length >> 8) % 256 + (data.length >> 16) % 256
+    ]);
     r.add(data);
   }
-  final s = new List(padding);
-  s.fillRange(0, padding, 0);
+  final s = new List.filled(padding!, null, growable: false);
   r.add(s);
 
-  return r.expand((element) => element).toList();
+  return r.expand((element) => element).toList() as List<int>;
 }
 
 serializeDate(dt) {
@@ -150,7 +168,8 @@ serializeDate(dt) {
     return new List.filled(4, 0);
   }
   if (dt is DateTime) {
-    dt = ((DateTime.now().millisecondsSinceEpoch - dt.millisecondsSinceEpoch) / 1000);
+    dt = (DateTime.now().millisecondsSinceEpoch - dt.millisecondsSinceEpoch) /
+        1000 as DateTime;
   }
   if (dt is int) {
     final t = readBufferFromBigInt(dt, 4, signed: true);
@@ -159,7 +178,7 @@ serializeDate(dt) {
   throw ('Cannot interpret "${dt}" as a date');
 }
 
-buildArgConfig(name, String argType) {
+buildArgConfig(name, String? argType) {
   name = name == 'self' ? 'is_self' : name;
   // Default values
   final currentConfig = {
@@ -182,31 +201,36 @@ buildArgConfig(name, String argType) {
   if (argType != '#') {
     currentConfig['flagIndicator'] = false;
     // Strip the exclamation mark always to have only the name
-    currentConfig['type'] = argType.replaceAll(new RegExp(r'^!+'), '');
+    currentConfig['type'] = argType!.replaceAll(new RegExp(r'^!+'), '');
 
     // The type may be a flag (flags.IDX?REAL_TYPE)
     // Note that 'flags' is NOT the flags name; this
     // is determined by a previous argument
     // However, we assume that the argument will always be called 'flags'
     // @ts-ignore
-    final flagMatch = new RegExp(r'flags.(\d+)\?([\w<>.]+)').allMatches(currentConfig['type']).toList();
+    final flagMatch = new RegExp(r'flags.(\d+)\?([\w<>.]+)')
+        .allMatches(currentConfig['type'] as String)
+        .toList();
 
     if (flagMatch.length > 0) {
       currentConfig['isFlag'] = true;
-      currentConfig['flagIndex'] = int.parse(flagMatch[0].group(1));
+      currentConfig['flagIndex'] = int.parse(flagMatch[0].group(1)!);
       // Update the type to match the exact type, not the "flagged" one
       currentConfig['type'] = flagMatch[0].group(2);
     }
 
     // Then check if the type is a Vector<REAL_TYPE>
-    final vectorMatch = new RegExp(r'[Vv]ector<([\w\d.]+)>').allMatches(currentConfig['type']).toList();
+    final vectorMatch = new RegExp(r'[Vv]ector<([\w\d.]+)>')
+        .allMatches(currentConfig['type'] as String)
+        .toList();
 
     if (vectorMatch.length > 0) {
       currentConfig['isVector'] = true;
       // If the type's first letter is not uppercase, then
       // it is a constructor and we use (read/write) its ID.
 
-      currentConfig['useVectorId'] = currentConfig['type'].toString().startsWith('V');
+      currentConfig['useVectorId'] =
+          currentConfig['type'].toString().startsWith('V');
 
       // Update the type to match the one inside the vector
       currentConfig['type'] = vectorMatch[0].group(1);
@@ -215,7 +239,11 @@ buildArgConfig(name, String argType) {
     // See use_vector_id. An example of such case is ipPort in
     // help.configSpecial
     // @ts-ignore
-    if (new RegExp(r'^[a-z]$').hasMatch(currentConfig['type'].toString().split('.').removeLast().substring(0, 1))) {
+    if (new RegExp(r'^[a-z]$').hasMatch(currentConfig['type']
+        .toString()
+        .split('.')
+        .removeLast()
+        .substring(0, 1))) {
       currentConfig['skipConstructorId'] = true;
     }
 
@@ -234,7 +262,7 @@ buildArgConfig(name, String argType) {
   return currentConfig;
 }
 
-parseTl(content, layer, {methods: null, List<int> ignoreIds: null}) sync* {
+parseTl(content, layer, {methods: null, List<int>? ignoreIds: null}) sync* {
   methods ??= [];
   ignoreIds ??= CORE_TYPES;
   /*final methodInfo = (methods ?? []).reduce(

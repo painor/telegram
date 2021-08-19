@@ -1,7 +1,6 @@
 import '../crypto/auth_key.dart';
 
 class Session {
-
   /**
    * Creates a clone of this session file
    * @param toInstance {Session|null}
@@ -21,44 +20,44 @@ class Session {
    * @param port {number}
    */
   setDC(dcId, serverAddress, port) {
-    throw('Not implemented');
+    throw ('Not implemented');
   }
 
   /**
    * Returns the currently-used data center ID.
    */
   get dcId {
-    throw('Not Implemented');
+    throw ('Not Implemented');
   }
 
   /**
    * Returns the server address where the library should connect to.
    */
   get serverAddress {
-    throw('Not Implemented');
+    throw ('Not Implemented');
   }
 
   /**
    * Returns the port to which the library should connect to.
    */
   get port {
-    throw('Not Implemented');
+    throw ('Not Implemented');
   }
 
   /**
    * Returns an ``AuthKey`` instance associated with the saved
    * data center, or `None` if a new one should be generated.
    */
-  get authKey{
-    throw('Not Implemented');
+  AuthKey? get authKey {
+    throw ('Not Implemented');
   }
 
   /**
    * Sets the ``AuthKey`` to be used for the saved data center.
    * @param value
    */
-  set authKey(AuthKey value) {
-    throw('Not Implemented');
+  set authKey(AuthKey? value) {
+    throw ('Not Implemented');
   }
 
   /**
@@ -123,7 +122,7 @@ class Session {
    * make persist the relevant session information to disk.
    */
   save() {
-    throw('Not Implemented');
+    throw ('Not Implemented');
   }
 
   /**
@@ -132,7 +131,7 @@ class Session {
    */
 
   delete() {
-    throw('Not Implemented');
+    throw ('Not Implemented');
   }
 
 /**

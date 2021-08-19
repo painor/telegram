@@ -86,7 +86,7 @@ loadFromTlSchemas() {
 // {name: DestroySession, constructorId: 3880853798, argsConfig: {sessionId: {isVector: false, isFlag: false, skipConstructorId: true,
 //flagIndex: -1, flagIndicator: false, type: long, useVectorId: null}}, subclassOfId: 2936858557, result:
 //DestroySessionRes, isFunction: true, namespace: null}
-String getType(String tgType, bool isVector) {
+String getType(String? tgType, bool isVector) {
   String result = "";
   if (isVector) {
     result += "List<";
@@ -208,7 +208,7 @@ bool writeArgToBytes(ClassWriter writer, arg, Map<dynamic, dynamic> argsConfig, 
     writer.write("readBufferFromBigInt($name.length,4,little:true,signed:true),");
 
     writer.write(("$name.map((x)=>"));
-    final bool oldFlag = arg['isFlag'];
+    final bool? oldFlag = arg['isFlag'];
     arg['isVector'] = false;
     arg['isFlag'] = false;
     writeArgToBytes(writer, arg, argsConfig, name: 'x');
@@ -274,15 +274,15 @@ bool writeArgToBytes(ClassWriter writer, arg, Map<dynamic, dynamic> argsConfig, 
   return true;
 }
 
-writeGetBytes(ClassWriter writer, String name, argsConfig, constructorId) {
+writeGetBytes(ClassWriter writer, String? name, argsConfig, constructorId) {
   writer.write("\n\tList<int> getBytes(){");
-  final Map<int, List<dynamic>> repeatedArgs = {};
+  final Map<int?, List<dynamic>> repeatedArgs = {};
   argsConfig.forEach((argName, arg) {
     if (arg['isFlag']) {
       if (!repeatedArgs.containsKey([arg['flagIndex']])) {
         repeatedArgs[arg['flagIndex']] = [];
       }
-      repeatedArgs[arg['flagIndex']].add(arg);
+      repeatedArgs[arg['flagIndex']]!.add(arg);
     }
   });
   writer.write("return [readBufferFromBigInt(" + constructorId.toString() + ",4),");
@@ -309,7 +309,8 @@ createClasses(classesType, params) {
     //Creating files
     if (!file.existsSync()) {
       // append = "part of ${classesType == "requests" ? "request" : "constructor"};\n";
-      append = "import '../../utils.dart';\n";
+      append = "// @dart=2.10\n";
+      append += "import '../../utils.dart';\n";
       append += "import '../../extensions/binary_reader.dart';\n\n";
       file.createSync(recursive: true);
     }
@@ -344,7 +345,7 @@ createClasses(classesType, params) {
   }
 }
 
-void writeReadResults(ClassWriter writer, String name, Map<String, dynamic> argsConfig, classType, result) {
+void writeReadResults(ClassWriter writer, String? name, Map<String, dynamic> argsConfig, classType, result) {
   if (classType != "requests") {
     return;
   }
@@ -356,7 +357,7 @@ void writeReadResults(ClassWriter writer, String name, Map<String, dynamic> args
     writer.write("return reader.tgReadObject();\n\t}");
     return;
   }
-  final type = m.group(1);
+  final type = m.group(1)!;
   writer.write("\n\tList<${type=="int"?"int":"BigInt"}> readResult(BinaryReader reader) {");
   writer.write("\n\t");
 

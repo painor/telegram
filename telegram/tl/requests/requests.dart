@@ -1,3 +1,4 @@
+// @dart=2.10
 import '../../utils.dart';
 import '../../extensions/binary_reader.dart';
 

@@ -13,9 +13,9 @@ class MTProtoPlainSender {
    * @param connection connection: the Connection to be used.
    * @param loggers
    */
-  MTProtoState _state;
-  Connection _connection;
-  MTProtoPlainSender(Connection connection, loggers) {
+  late MTProtoState _state;
+  Connection? _connection;
+  MTProtoPlainSender(Connection? connection, loggers) {
     this._state = new MTProtoState(null, loggers);
     this._connection = connection;
   }
@@ -25,27 +25,28 @@ class MTProtoPlainSender {
    * @param request
    */
   send(request) async {
-
     List<int> body = request.getBytes();
     BigInt msgId = this._state.getNewMsgId();
     final m = toSignedLittleBuffer(msgId, number: 8);
-    final b = new List<int>();
-    b.addAll(readBufferFromBigInt(body.length, 4,signed: true));
+    final b = <int?>[];
+    b.addAll(readBufferFromBigInt(body.length, 4, signed: true));
 
-    final res = [new List.filled(8,0), m, b, body].expand((element) => element).toList();
-    await this._connection.send(res);
-    body = await this._connection.recv();
+    final res = [new List.filled(8, 0), m, b, body]
+        .expand((element) => element)
+        .toList();
+    await this._connection!.send(res);
+    body = await this._connection!.recv();
     if (body.length < 8) {
       throw ("Invalid response buffer (too short $body)");
     }
     final reader = new BinaryReader(body);
     final authKeyId = reader.readLong();
-    if (authKeyId!=BigInt.zero) {
-      throw('Bad authKeyId');
+    if (authKeyId != BigInt.zero) {
+      throw ('Bad authKeyId');
     }
     msgId = reader.readLong();
-    if (msgId ==BigInt.zero) {
-      throw('Bad msgId');
+    if (msgId == BigInt.zero) {
+      throw ('Bad msgId');
     }
     /** ^ We should make sure that the read ``msg_id`` is greater
      * than our own ``msg_id``. However, under some circumstances
@@ -55,7 +56,7 @@ class MTProtoPlainSender {
 
     final length = reader.readInt();
     if (length <= 0) {
-      throw('Bad length');
+      throw ('Bad length');
     }
     /**
      * We could read length bytes and use those in a new reader to read
@@ -64,5 +65,4 @@ class MTProtoPlainSender {
      */
     return reader.tgReadObject();
   }
-
 }

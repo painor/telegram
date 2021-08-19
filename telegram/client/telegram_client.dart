@@ -18,14 +18,14 @@ const int DEFAULT_PORT = 443;
 
 class TelegramClient {
   final int apiId;
-  StringSession session;
-  var _initWith;
-  int _connectionRetries, _requestRetries, _retryDelay;
+  late StringSession session;
+  late var _initWith;
+  int? _connectionRetries, _requestRetries, _retryDelay;
   final String apiHash;
-  MTProtoSender _sender;
-  Logger _log;
-  Type _connection;
-  var _eventBuilders;
+  MTProtoSender? _sender;
+  Logger? _log;
+  Type? _connection;
+  late var _eventBuilders;
 
   TelegramClient(session, this.apiId, this.apiHash,
       {connection: ConnectionTCPFull,
@@ -90,7 +90,8 @@ class TelegramClient {
         entities.add(x);
       }
       for (final u in update.updates) {
-        this._processUpdate(update: u, others: update.updates, entities: entities);
+        this._processUpdate(
+            update: u, others: update.updates, entities: entities);
       }
     } else if (update is UpdateShort) {
       this._processUpdate(update: update.update, others: null);
@@ -101,7 +102,7 @@ class TelegramClient {
     // this._stateCache.update(update)
   }
 
-  _processUpdate({update, others, entities}) {
+  _processUpdate({required update, others, entities}) {
     update._entities = entities ?? [];
     this._dispatchUpdate(
       update: update,
@@ -140,44 +141,45 @@ class TelegramClient {
       //isMainSender: true,
     );
 
-    final connection = ConnectionTCPFull(this.session.serverAddress, this.session.port, this.session.dcId, this._log);
-    if (!await this._sender.connect(connection, eventDispatch: this._dispatchUpdate)) {
+    final connection = ConnectionTCPFull(this.session.serverAddress,
+        this.session.port, this.session.dcId, this._log);
+    if (!await this
+        ._sender!
+        .connect(connection, eventDispatch: this._dispatchUpdate)) {
       return;
     }
-    this.session.setAuthKey(this._sender.authKey,null);
-    await this._sender.send(this._initWith(
-      new GetConfig(),
-    ));
+    this.session.setAuthKey(this._sender!.authKey, null);
+    await this._sender!.send(this._initWith(
+          new GetConfig(),
+        ));
 
     //this._dispatchUpdate({ update: new UpdateConnectionState(1) })
 
     this._updateLoop();
-
   }
 
   isConnected() {
-    if (this._sender!=null) {
-      if (this._sender.isConnected()) {
+    if (this._sender != null) {
+      if (this._sender!.isConnected()!) {
         return true;
       }
     }
     return false;
   }
-   _updateLoop() async{
+
+  _updateLoop() async {
     while (this.isConnected()) {
       Random random = Random.secure();
 
-      final rnd = random.nextInt(2^32);
+      final rnd = random.nextInt(2 ^ 32);
       await asyncSleep(60);
       // We don't care about the result we just want to send it every
       // 60 seconds so telegram doesn't stop the connection
       try {
-        this._sender.send(new Ping(
-          pingId: BigInt.from(rnd),
-        ));
-      } catch (e) {
-
-      }
+        this._sender!.send(new Ping(
+              pingId: BigInt.from(rnd),
+            ));
+      } catch (e) {}
 
       // We need to send some content-related request at least hourly
       // for Telegram to keep delivering updates, otherwise they will
@@ -193,5 +195,4 @@ class TelegramClient {
       }*/
     }
   }
-
 }

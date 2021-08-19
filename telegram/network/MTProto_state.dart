@@ -8,10 +8,10 @@ import '../utils.dart';
 import 'package:crypto/crypto.dart';
 
 class MTProtoState {
-  AuthKey authKey;
-  var _log,  salt, id, sequence;
-  int timeOffset;
-  BigInt _lastMsgId;
+  AuthKey? authKey;
+  var _log, salt, id, sequence;
+  int? timeOffset;
+  BigInt? _lastMsgId;
 
   /**
    *
@@ -38,7 +38,7 @@ class MTProtoState {
    * @param authKey
    * @param loggers
    */
-  MTProtoState(AuthKey authKey, loggers) {
+  MTProtoState(AuthKey? authKey, loggers) {
     this.authKey = authKey;
     this._log = loggers;
     this.timeOffset = 0;
@@ -76,10 +76,17 @@ class MTProtoState {
    */
   List<List<int>> _calcKey(List<int> authKey, List<int> msgKey, bool client) {
     final x = client == true ? 0 : 8;
-    final List<int> sha256a = sha256.convert(msgKey + authKey.sublist(x, x + 36)).bytes;
-    final List<int> sha256b = sha256.convert(authKey.sublist(x + 40, x + 76) + msgKey).bytes;
-    final List<int> key = sha256a.sublist(0, 8) + sha256b.sublist(8, 24) + sha256a.sublist(24, 32);
-    final List<int> iv = sha256b.sublist(0, 8) + sha256a.sublist(8, 24) + sha256b.sublist(24, 32);
+    final List<int> sha256a =
+        sha256.convert(msgKey + authKey.sublist(x, x + 36) as List<int>).bytes;
+    final List<int> sha256b = sha256
+        .convert(authKey.sublist(x + 40, x + 76) + msgKey as List<int>)
+        .bytes;
+    final List<int> key = sha256a.sublist(0, 8) +
+        sha256b.sublist(8, 24) +
+        sha256a.sublist(24, 32);
+    final List<int> iv = sha256b.sublist(0, 8) +
+        sha256a.sublist(8, 24) +
+        sha256b.sublist(24, 32);
     return [key, iv];
   }
 
@@ -91,11 +98,12 @@ class MTProtoState {
    * @param contentRelated
    * @param afterId
    */
-  BigInt writeDataAsMessage(BinaryWriter buffer, List<int> data, bool contentRelated, bool afterId) {
+  BigInt writeDataAsMessage(BinaryWriter buffer, List<int>? data,
+      bool contentRelated, bool? afterId) {
     final msgId = this.getNewMsgId();
     final seqNo = this._getSeqNo(contentRelated);
     var body;
-    if (afterId!=true) {
+    if (afterId != true) {
       body = GZIPPacked.gzipIfSmaller(contentRelated, data);
     } else {
       throw ("Not needed for now!");
@@ -122,15 +130,20 @@ class MTProtoState {
     final padding = generateRandomBytes((-(data.length + 12) % 16) + 12);
     // Being substr(what, offset, length); x = 0 for client
     // "msg_key_large = SHA256(substr(auth_key, 88+x, 32) + pt + padding)"
-    final List<int> msgKeyLarge = sha256.convert(this.authKey.getKey().sublist(88, 88 + 32) + data + padding).bytes;
+    final List<int> msgKeyLarge = sha256
+        .convert(this.authKey!.getKey()!.sublist(88, 88 + 32) + data + padding
+            as List<int>)
+        .bytes;
     // "msg_key = substr (msg_key_large, 8, 16)"
     final List<int> msgKey = msgKeyLarge.sublist(8, 24);
 
-    final result = this._calcKey(this.authKey.getKey(), msgKey, true);
+    final result = this._calcKey(this.authKey!.getKey()!, msgKey, true);
     final List<int> key = result[0];
     final List<int> iv = result[1];
-    final keyId = readBufferFromBigInt(this.authKey.keyId, 8);
-    return [keyId, msgKey, IGE.encryptIge(data + padding, key, iv)].expand((element) => element).toList();
+    final keyId = readBufferFromBigInt(this.authKey!.keyId, 8);
+    return [keyId, msgKey, IGE.encryptIge(data + padding, key, iv)]
+        .expand((element) => element)
+        .toList();
   }
 
   /**
@@ -144,12 +157,12 @@ class MTProtoState {
 
     // TODO Check salt,sessionId, and sequenceNumber
     final BigInt keyId = readBigIntFromBuffer(body.sublist(0, 8));
-    if (keyId != this.authKey.keyId) {
+    if (keyId != this.authKey!.keyId) {
       throw ('Server replied with an invalid auth key');
     }
 
     final msgKey = body.sublist(8, 24);
-    final result = this._calcKey(this.authKey.getKey(), msgKey, false);
+    final result = this._calcKey(this.authKey!.getKey()!, msgKey, false);
     final key = result[0];
     final iv = result[1];
 
@@ -158,8 +171,12 @@ class MTProtoState {
     // https://core.telegram.org/mtproto/security_guidelines
     // Sections "checking sha256 hash" and "message length"
 
-    final ourKey = sha256.convert([this.authKey.getKey().sublist(96, 96 + 32), body].expand((element) => element).toList()).bytes;
-    if (!eq(msgKey,ourKey.sublist(8, 24))) {
+    final ourKey = sha256
+        .convert([this.authKey!.getKey()!.sublist(96, 96 + 32), body]
+            .expand((element) => element)
+            .toList())
+        .bytes;
+    if (!eq(msgKey, ourKey.sublist(8, 24))) {
       throw ("Received msg_key doesn't match with expected one");
     }
 
@@ -188,17 +205,16 @@ class MTProtoState {
    * @private
    */
   BigInt getNewMsgId() {
-    final now = DateTime.now().millisecondsSinceEpoch / 1000 + this.timeOffset;
+    final now = DateTime.now().millisecondsSinceEpoch / 1000 + this.timeOffset!;
     final nanoseconds = ((now - now.floor()) * 1e9).floor();
     var a = BigInt.from(now.floor());
     var c = BigInt.from(nanoseconds);
-    var newMsgId = (a<<32) | (c<<2);
-    if (this._lastMsgId>=newMsgId) {
-      newMsgId = this._lastMsgId + BigInt.from(4);
+    var newMsgId = (a << 32) | (c << 2);
+    if (this._lastMsgId! >= newMsgId) {
+      newMsgId = this._lastMsgId! + BigInt.from(4);
     }
     this._lastMsgId = newMsgId;
     return newMsgId;
-
   }
 
   /**
@@ -206,10 +222,10 @@ class MTProtoState {
    * one given a known valid message ID.
    * @param correctMsgId {BigInteger}
    */
-  int updateTimeOffset(int correctMsgId) {
+  int? updateTimeOffset(int correctMsgId) {
     final bad = this.getNewMsgId();
     final old = this.timeOffset;
-    final now =(DateTime.now().millisecondsSinceEpoch / 1000).floor();
+    final now = (DateTime.now().millisecondsSinceEpoch / 1000).floor();
     final correct = correctMsgId >> 32;
     this.timeOffset = correct - now;
     if (this.timeOffset != old) {
@@ -228,7 +244,7 @@ class MTProtoState {
    * @param contentRelated
    * @private
    */
-  int _getSeqNo(contentRelated) {
+  int? _getSeqNo(contentRelated) {
     if (contentRelated) {
       final result = this.sequence * 2 + 1;
       this.sequence += 1;

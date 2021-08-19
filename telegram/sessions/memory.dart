@@ -2,9 +2,9 @@ import '../crypto/auth_key.dart';
 import 'abstract.dart';
 
 class MemorySession extends Session {
-  String _serverAddress;
-  int _dcId, _port;
-  AuthKey _authKey;
+  String? _serverAddress;
+  int? _dcId, _port;
+  AuthKey? _authKey;
 
   MemorySession() {
     this._serverAddress = null;
@@ -30,11 +30,11 @@ class MemorySession extends Session {
     return this._port;
   }
 
-  AuthKey get authKey {
+  AuthKey? get authKey {
     return this._authKey;
   }
 
-  set authKey(AuthKey value) {
+  set authKey(AuthKey? value) {
     this._authKey = value;
   }
 /* CONTEST

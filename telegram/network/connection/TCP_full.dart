@@ -15,7 +15,7 @@ class FullPacketCodec extends PacketCodec {
 // https://core.telegram.org/mtproto#tcp-transport
 // total length, sequence number, packet and checksum (CRC32)
     final length = data.length + 12;
-    final toSend = <int?>[];
+    final toSend = <int>[];
 
     toSend.addAll(readBufferFromBigInt(length, 4, signed: true));
 
@@ -36,11 +36,7 @@ class FullPacketCodec extends PacketCodec {
    * @returns {Promise<*>}
    */
   Future<List<int?>> readPacket(FutureSocket reader) async {
-    final packetLenSeq = await reader.readExactly(8); // 4 and 4
-// process.exit(0);
-    if (packetLenSeq == false) {
-      return [];
-    }
+    final List<int> packetLenSeq = await reader.readExactly(8); // 4 and 4
     final int packetLen =
         readBigIntFromBuffer(packetLenSeq.sublist(0, 4), signed: true).toInt();
     final body = await reader.read(packetLen - 8);

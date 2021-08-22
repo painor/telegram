@@ -1,8 +1,6 @@
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:crclib/catalog.dart';
-import 'package:crclib/crclib.dart';
 
 import '../utils.dart';
 
@@ -24,10 +22,6 @@ variableSnakeToCamelCase(String str) {
     s += "Var";
   }
   return s;
-}
-
-void main() {
-  print(snakeToCamelCase("this_game_is_fuun"));
 }
 
 final CORE_TYPES = [

@@ -10,7 +10,7 @@ class FutureSocket {
   Completer<bool> canRead = new Completer<bool>();
 
   Future<void> connect(String? ip, int port) async {
-    stream = new BinaryWriter(<int?>[]);
+    stream = new BinaryWriter(<int>[]);
     canRead = new Completer<bool>();
 
     client = await Socket.connect(ip, port);
@@ -32,7 +32,7 @@ class FutureSocket {
     this.closed = true;
   }
 
-  Future<List<int?>> read(int number) async {
+  Future<List<int>> read(int number) async {
     if (this.closed) {
       throw ("Socket was closed");
     }
@@ -49,7 +49,7 @@ class FutureSocket {
     return toReturn;
   }
 
-  Future<List<int?>> readExactly(int number) async {
+  Future<List<int>> readExactly(int number) async {
     final readData = new BinaryWriter([]);
     while (true) {
       final thisTime = await this.read(number);

@@ -158,7 +158,7 @@ RSAencrypt(BigInt fingerprint, List<int?> data) {
 // len(sha1.digest) is always 20, so we're left with 255 - 20 - x padding
   final rand = generateRandomBytes(235 - data.length);
 
-  final List<int?> toEncrypt = [
+  final List<int> toEncrypt = [
     sha1.convert(data as List<int>).bytes,
     data,
     rand

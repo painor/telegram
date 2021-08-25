@@ -5,12 +5,12 @@ import 'package:convert/convert.dart';
 import 'package:crypto/crypto.dart';
 import 'package:collection/collection.dart';
 
-BigInt readBigIntFromBuffer(List<int?> buffer, {little: true, signed: false}) {
+BigInt readBigIntFromBuffer(List<int> buffer, {little: true, signed: false}) {
   final bytesNumber = buffer.length;
   if (little) {
     buffer = buffer.reversed.toList();
   }
-  BigInt bigInt = BigInt.parse(hex.encode(buffer as List<int>), radix: 16);
+  BigInt bigInt = BigInt.parse(hex.encode(buffer), radix: 16);
   if (signed && (bigInt.toRadixString(2).length / 8).floor() >= bytesNumber) {
     BigInt lesser = BigInt.two.pow(bytesNumber * 8);
     bigInt = bigInt - lesser;

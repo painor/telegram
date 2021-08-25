@@ -21,15 +21,7 @@ final queue = Queue<String>();
 class Connection {
   late var PacketCodecClass;
 
-  var _ip,
-      _port,
-      _dcId,
-      _log,
-      _connected,
-      _sendTask,
-      _recvTask,
-      _codec,
-      _obfuscation;
+  var _ip, _port, _dcId, _log, _connected, _sendTask, _recvTask, _codec, _obfuscation;
 
   AsyncQueue _sendArray, _recvArray;
 
@@ -77,7 +69,7 @@ class Connection {
     await this.socket.close();
   }
 
-  send(List<int?> data) async {
+  send(List<int> data) async {
     if (!this._connected) {
       throw ('Not connected');
     }
@@ -86,9 +78,9 @@ class Connection {
 
   recv() async {
     while (this._connected) {
-      final List<int?>? result = await this._recvArray.pop();
+      final List<int> result = await this._recvArray.pop();
       // null = sentinel value = keep trying
-      if (result?.length != 0) {
+      if (result.length != 0) {
         return result;
       }
     }
@@ -99,7 +91,7 @@ class Connection {
     // TODO handle errors
     try {
       while (this._connected) {
-        final data = await (this._sendArray.pop() as FutureOr<List<int?>>);
+        final data = await this._sendArray.pop();
         if (data.length == 0) {
           this._sendTask = null;
           return;
@@ -157,12 +149,10 @@ class Connection {
 class ObfuscatedConnection extends Connection {
   dynamic ObfuscatedIO = null;
 
-  ObfuscatedConnection(ip, port, dcId, loggers)
-      : super(ip, port, dcId, loggers);
+  ObfuscatedConnection(ip, port, dcId, loggers) : super(ip, port, dcId, loggers);
 
   _initConn() async {
-    this._obfuscation =
-        reflectClass(this.PacketCodecClass).newInstance(new Symbol(''), []);
+    this._obfuscation = reflectClass(this.PacketCodecClass).newInstance(new Symbol(''), []);
     this.socket.write(this._obfuscation.header);
   }
 
@@ -177,6 +167,7 @@ class ObfuscatedConnection extends Connection {
 
 class PacketCodec {
   var _conn;
+
   PacketCodec(connection) {
     this._conn = connection;
   }

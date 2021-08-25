@@ -195,9 +195,9 @@ bool writeArgToBytes(ClassWriter writer, arg, Map<dynamic, dynamic> argsConfig, 
     if (arg['type'] == 'true') {
       return false;
     } else if (arg['isVector']) {
-      writer.write("($name==null||$name==false)?new List<int>():[");
+      writer.write("($name==null||$name==false)?List<int>.filled(0, 0, growable: false):[");
     } else {
-      writer.write("($name==null||$name==false)?new List<int>():[");
+      writer.write("($name==null||$name==false)?List<int>.filled(0, 0, growable: false):[");
     }
   }
 
@@ -205,9 +205,9 @@ bool writeArgToBytes(ClassWriter writer, arg, Map<dynamic, dynamic> argsConfig, 
     if (arg['useVectorId']) {
       writer.write("readBufferFromBigInt(0x15c4b51c,4,little:false,signed:false),");
     }
-    writer.write("readBufferFromBigInt($name.length,4,little:true,signed:true),");
+    writer.write("readBufferFromBigInt($name!.length,4,little:true,signed:true),");
 
-    writer.write(("$name.map((x)=>"));
+    writer.write(("$name!.map((x)=>"));
     final bool? oldFlag = arg['isFlag'];
     arg['isVector'] = false;
     arg['isFlag'] = false;
@@ -248,7 +248,7 @@ bool writeArgToBytes(ClassWriter writer, arg, Map<dynamic, dynamic> argsConfig, 
   } else if (arg['type'] == 'string') {
     writer.write('serializeBytes($name)');
   } else if (arg['type'] == 'Bool') {
-    writer.write('[$name ? 0xb5757299 : 0x379779bc]');
+    writer.write('[($name!= null && $name==true) ? 0xb5757299 : 0x379779bc]');
   } else if (arg['type'] == 'true') {
   } else if (arg['type'] == 'bytes') {
     writer.write('serializeBytes($name)');
@@ -308,8 +308,7 @@ createClasses(classesType, params) {
     var append = "\n\n";
     //Creating files
     if (!file.existsSync()) {
-      // append = "part of ${classesType == "requests" ? "request" : "constructor"};\n";
-      append = "// @dart=2.10\n";
+      append = "//part of ${classesType == "requests" ? "request" : "constructor"};\n";
       append += "import '../../utils.dart';\n";
       append += "import '../../extensions/binary_reader.dart';\n\n";
       file.createSync(recursive: true);
@@ -331,7 +330,11 @@ createClasses(classesType, params) {
         return;
       }
       filtered.add("this.$key");
-      writer.write("""\t${getType(value['type'], value['isVector'])} $key;\n""");
+      String type = getType(value['type'], value['isVector']);
+      if (type!="var" && type !="dynamic"){
+        type+="?";
+      }
+      writer.write("""\t${type} $key;\n""");
     });
     //Constructor
     argsConfig.forEach((key, value) {});
@@ -366,7 +369,8 @@ void writeReadResults(ClassWriter writer, String? name, Map<String, dynamic> arg
   writer.write("\nfinal List<${type=="int"?"int":"BigInt"}> result = [];");
   writer.write("\n for (int i=0;i<range;i++){\n\t");
   writer.write("result.add(reader.read${type.substring(0, 1).toUpperCase()}${type.substring(1, type.length)}());");
-  writer.write("}\n\t}");
+  writer.write("}\n"
+      "return result;\t}");
 }
 
 getArgFromReader(ClassWriter writer, arg, argName, {end: true}) {

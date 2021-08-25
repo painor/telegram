@@ -51,7 +51,7 @@ class MessagePacker {
       return;
     }
     var data;
-    BinaryWriter buffer = new BinaryWriter(<int?>[]);
+    BinaryWriter buffer = new BinaryWriter(<int>[]);
 
     final batch = [];
     var size = 0;

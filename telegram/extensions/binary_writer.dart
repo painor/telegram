@@ -1,17 +1,17 @@
 class BinaryWriter {
-  List<int?> _stream;
+  List<int> _stream;
 
-  BinaryWriter(List<int?> this._stream);
+  BinaryWriter(List<int> this._stream);
 
   get length {
     return this._stream.length;
   }
 
-  void write(List<int?> buffer) {
+  void write(List<int> buffer) {
     this._stream.addAll(buffer);
   }
 
-  Future<List<int?>> read(int number) async {
+  Future<List<int>> read(int number) async {
     if (number > this._stream.length) {
       number = this._stream.length;
     }
@@ -23,7 +23,7 @@ class BinaryWriter {
     return toReturn;
   }
 
-  List<int?> getValue() {
-    return new List<int?>.from(this._stream);
+  List<int> getValue() {
+    return new List<int>.from(this._stream);
   }
 }

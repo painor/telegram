@@ -191,9 +191,8 @@ class BinaryReader {
         // If there was still no luck, give up
         this.seek(-4); // Go back
         final pos = this.tellPosition();
-        final error = new Error();
         this.setPosition(pos);
-        throw error;
+        throw ("Object with ID ${constructorId} not found!");
       }
     }
     var c = reflectClass(clazz);

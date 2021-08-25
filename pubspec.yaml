@@ -7,7 +7,10 @@ environment:
 dependencies:
   convert: ^3.0.0
   crclib:
-    git: https://github.com/google/crclib.dart.git
+    git:
+      url: git://github.com/google/crclib.dart.git
+      ref: nullsafety
+
   crypto: ^3.0.0
   pointycastle: ^3.3.1
 

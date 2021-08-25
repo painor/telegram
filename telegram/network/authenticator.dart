@@ -27,13 +27,13 @@ doAuthentication(MTProtoPlainSender sender, log) async {
     print("Recieved Nonce ${resPQ.nonce}");
     throw new SecurityError('Step 1 invalid nonce from server');
   }
-  final pq = readBigIntFromBuffer(resPQ.pq, little: false, signed: true);
+  final pq = readBigIntFromBuffer(resPQ.pq!, little: false, signed: true);
   log.debug('Finished authKey generation step 1');
   log.debug('Starting authKey generation step 2');
   // Step 2 sending: DH Exchange
   final factRes = Factorizator.factorize(pq);
-  var p_int = factRes['p'];
-  var q_int = factRes['q'];
+  var p_int = factRes['p']!;
+  var q_int = factRes['q']!;
   // TODO Bring back after 'Factorizator' fix.
   final List<int> p = getByteArray(p_int);
   final List<int> q = getByteArray(q_int);
@@ -52,9 +52,9 @@ doAuthentication(MTProtoPlainSender sender, log) async {
   );
 
   // sha_digest + data + random_bytes
-  var cipherText = null;
-  var targetFingerprint = null;
-  for (final fingerprint in resPQ.serverPublicKeyFingerprints) {
+  dynamic cipherText = null;
+  dynamic targetFingerprint = null;
+  for (final fingerprint in resPQ.serverPublicKeyFingerprints!) {
     cipherText = await RSAencrypt(fingerprint, pqInnerData.getBytes());
     if (cipherText != null && cipherText != null) {
       targetFingerprint = fingerprint;
@@ -62,7 +62,8 @@ doAuthentication(MTProtoPlainSender sender, log) async {
     }
   }
   if (cipherText == null) {
-    throw new SecurityError('Step 2 could not find a valid key for fingerprints');
+    throw new SecurityError(
+        'Step 2 could not find a valid key for fingerprints');
   }
   var obj = new ReqDHParams(
     nonce: resPQ.nonce,
@@ -82,7 +83,8 @@ doAuthentication(MTProtoPlainSender sender, log) async {
       encryptedData: cipherText,
     ),
   );
-  if (!(serverDhParams is ServerDHParamsOk || serverDhParams is ServerDHParamsFail)) {
+  if (!(serverDhParams is ServerDHParamsOk ||
+      serverDhParams is ServerDHParamsFail)) {
     throw ('Step 2.1 answer was ${serverDhParams}');
   }
   if (serverDhParams.nonce != resPQ.nonce) {
@@ -94,7 +96,10 @@ doAuthentication(MTProtoPlainSender sender, log) async {
   }
 
   if (serverDhParams is ServerDHParamsFail) {
-    final List<int> sh = sha1.convert(toSignedLittleBuffer(newNonce, number: 32).sublist(4, 20)).bytes;
+    final List<int> sh = sha1
+        .convert(toSignedLittleBuffer(newNonce, number: 32).sublist(4, 20)
+            as List<int>)
+        .bytes;
     final nnh = readBigIntFromBuffer(sh, little: true, signed: true);
     if (serverDhParams.newNonceHash != (nnh)) {
       throw new SecurityError('Step 2 invalid DH fail nonce from server');
@@ -108,16 +113,17 @@ doAuthentication(MTProtoPlainSender sender, log) async {
 
   // Step 3 sending: Complete DH Exchange
   final resData = await generateKeyDataFromNonce(resPQ.serverNonce, newNonce);
-  final key = resData['key'];
-  final iv = resData['iv'];
-  if (serverDhParams.encryptedAnswer.length % 16 != 0) {
+  final key = resData['key']!;
+  final iv = resData['iv']!;
+  if (serverDhParams.encryptedAnswer!.length % 16 != 0) {
     // See PR#453
     throw new SecurityError('Step 3 AES block size mismatch');
   }
-  final plainTextAnswer = IGE.decryptIge(serverDhParams.encryptedAnswer, key, iv);
+  final plainTextAnswer =
+      IGE.decryptIge(serverDhParams.encryptedAnswer!, key, iv);
   final reader = new BinaryReader(plainTextAnswer);
   reader.read(length: 20); // hash sum
-  final ServerDHInnerData serverDhInner = reader.tgReadObject();
+  final ServerDHInnerData? serverDhInner = reader.tgReadObject();
   if (!(serverDhInner is ServerDHInnerData)) {
     throw ('Step 3 answer was ${serverDhInner}');
   }
@@ -128,11 +134,15 @@ doAuthentication(MTProtoPlainSender sender, log) async {
   if (serverDhInner.serverNonce != resPQ.serverNonce) {
     throw new SecurityError('Step 3 Invalid server nonce in encrypted answer');
   }
-  final dhPrime = readBigIntFromBuffer(serverDhInner.dhPrime, little: false, signed: false);
-  final ga = readBigIntFromBuffer(serverDhInner.gA, little: false, signed: false);
-  final timeOffset = serverDhInner.serverTime - (DateTime.now().millisecondsSinceEpoch / 1000).floor();
-  final b = readBigIntFromBuffer(generateRandomBytes(256), little: false, signed: false);
-  final gb = BigInt.from(serverDhInner.g).modPow(b, dhPrime);
+  final dhPrime = readBigIntFromBuffer(serverDhInner.dhPrime!,
+      little: false, signed: false);
+  final ga =
+      readBigIntFromBuffer(serverDhInner.gA!, little: false, signed: false);
+  final timeOffset = serverDhInner.serverTime! -
+      (DateTime.now().millisecondsSinceEpoch / 1000).floor();
+  final b = readBigIntFromBuffer(generateRandomBytes(256),
+      little: false, signed: false);
+  final gb = BigInt.from(serverDhInner.g!).modPow(b, dhPrime);
   final gab = ga.modPow(b, dhPrime);
 
   // Prepare client DH Inner Data
@@ -143,7 +153,10 @@ doAuthentication(MTProtoPlainSender sender, log) async {
     gB: getByteArray(gb, signed: false),
   ).getBytes();
 
-  final clientDdhInnerHashed = [sha1.convert(clientDhInner).bytes, clientDhInner].expand((element) => element).toList();
+  final clientDdhInnerHashed = [
+    sha1.convert(clientDhInner as List<int>).bytes,
+    clientDhInner
+  ].expand((element) => element).toList();
   // Encryption
   final clientDhEncrypted = IGE.encryptIge(clientDdhInnerHashed, key, iv);
   final DhGenOk dhGen = await sender.send(
@@ -154,7 +167,9 @@ doAuthentication(MTProtoPlainSender sender, log) async {
     ),
   );
   final nonceTypes = [DhGenOk, DhGenRetry, DhGenFail];
-  if (!(dhGen.runtimeType == nonceTypes[0] || dhGen.runtimeType == nonceTypes[1] || dhGen.runtimeType == nonceTypes[2])) {
+  if (!(dhGen.runtimeType == nonceTypes[0] ||
+      dhGen.runtimeType == nonceTypes[1] ||
+      dhGen.runtimeType == nonceTypes[2])) {
     throw ('Step 3.1 answer was ${dhGen}');
   }
   final name = dhGen.runtimeType;

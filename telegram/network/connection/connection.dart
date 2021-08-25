@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:mirrors';
 import "dart:collection";
 
@@ -6,6 +7,7 @@ import '../../extensions/future_socket.dart';
 import 'TCP_full.dart';
 
 final queue = Queue<String>();
+
 /**
  *
  * Subclasses will implement different transport modes as atomic operations,
@@ -17,12 +19,17 @@ final queue = Queue<String>();
  * the client is disconnected (includes remote disconnections).
  */
 class Connection {
-  var PacketCodecClass;
-  var _ip,_port,_dcId,_log,_connected,_sendTask,_recvTask,_codec,
-  _obfuscation;
-  AsyncQueue _sendArray,_recvArray;
-  FutureSocket socket;
-  Connection(ip, port, dcId, loggers) {
+  late var PacketCodecClass;
+
+  var _ip, _port, _dcId, _log, _connected, _sendTask, _recvTask, _codec, _obfuscation;
+
+  AsyncQueue _sendArray, _recvArray;
+
+  late FutureSocket socket;
+
+  Connection(ip, port, dcId, loggers)
+      : _sendArray = new AsyncQueue(),
+        _recvArray = new AsyncQueue() {
     this._ip = ip;
     this._port = port;
     this._dcId = dcId;
@@ -32,14 +39,12 @@ class Connection {
     this._recvTask = null;
     this._codec = null;
     this._obfuscation = null; // TcpObfuscated and MTProxy
-    this._sendArray =  new AsyncQueue();
-    this._recvArray = new AsyncQueue();
     //this.socket = new PromiseSocket(new Socket())
 
     this.socket = new FutureSocket();
   }
 
-  void _connect() async {
+  Future<void> _connect() async {
     this._log.debug('Connecting');
     this._codec = new FullPacketCodec(this);
     await this.socket.connect(this._ip, this._port);
@@ -47,68 +52,68 @@ class Connection {
     // await this.socket.connect({host: this._ip, port: this._port});
     await this._initConn();
   }
-  connect() async{
+
+  connect() async {
     await this._connect();
     this._connected = true;
 
-    if (this._sendTask==null) {
+    if (this._sendTask == null) {
       this._sendTask = this._sendLoop();
     }
     this._recvTask = this._recvLoop();
   }
 
-  disconnect() async{
+  disconnect() async {
     this._connected = false;
     await this._recvArray.push(null);
     await this.socket.close();
   }
 
-  send(List<int> data) async{
+  send(List<int> data) async {
     if (!this._connected) {
-      throw('Not connected');
+      throw ('Not connected');
     }
     await this._sendArray.push(data);
   }
 
-
-  recv() async{
+  recv() async {
     while (this._connected) {
       final List<int> result = await this._recvArray.pop();
       // null = sentinel value = keep trying
-      if (result.length!=0) {
+      if (result.length != 0) {
         return result;
       }
     }
-    throw('Not connected');
+    throw ('Not connected');
   }
 
-  _sendLoop() async{
+  _sendLoop() async {
     // TODO handle errors
     try {
       while (this._connected) {
         final data = await this._sendArray.pop();
-        if (data.length==0) {
+        if (data.length == 0) {
           this._sendTask = null;
           return;
         }
         await this._send(data);
       }
-    } catch (e,stacktrace) {
+    } catch (e, stacktrace) {
       print(stacktrace);
       print(e);
       this._log.info('The server closed the connection while sending');
     }
   }
 
-  _recvLoop() async{
+  _recvLoop() async {
     List<int> data;
     while (this._connected) {
       try {
         data = await this._recv();
-        if (data.length==0) {
-          throw("no data received");
+        if (data.length == 0) {
+          throw ("no data received");
         }
-      } catch (e,stacktrace) {
+      } catch (e, stacktrace) {
         print(e);
         print(stacktrace);
         this._log.info('connection closed');
@@ -120,9 +125,10 @@ class Connection {
       await this._recvArray.push(data);
     }
   }
+
   _initConn() async {
-    if (this._codec.tag!=null) {
-      await this.socket.write(this._codec.tag);
+    if (this._codec.tag != null) {
+      this.socket.write(this._codec.tag);
     }
   }
 
@@ -141,12 +147,12 @@ class Connection {
 }
 
 class ObfuscatedConnection extends Connection {
-  var ObfuscatedIO = null;
+  dynamic ObfuscatedIO = null;
 
   ObfuscatedConnection(ip, port, dcId, loggers) : super(ip, port, dcId, loggers);
 
-  _initConn() async{
-    this._obfuscation = reflectClass(this.PacketCodecClass).newInstance(new  Symbol(''), []);
+  _initConn() async {
+    this._obfuscation = reflectClass(this.PacketCodecClass).newInstance(new Symbol(''), []);
     this.socket.write(this._obfuscation.header);
   }
 
@@ -154,28 +160,26 @@ class ObfuscatedConnection extends Connection {
     this._obfuscation.write(this._codec.encodePacket(data));
   }
 
-
-   _recv() async{
+  _recv() async {
     return await this._codec.readPacket(this._obfuscation);
   }
 }
 
 class PacketCodec {
   var _conn;
+
   PacketCodec(connection) {
     this._conn = connection;
   }
 
-  List<int> encodePacket(List<int> data) {
-    throw('Not Implemented');
+  List<int?> encodePacket(List<int> data) {
+    throw ('Not Implemented');
 
     // Override
   }
 
-  Future<List<int>> readPacket(FutureSocket reader) async {
+  Future<List<int?>> readPacket(FutureSocket reader) async {
     // override
-    throw('Not Implemented');
+    throw ('Not Implemented');
   }
 }
-
-

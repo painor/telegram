@@ -8,24 +8,24 @@ import 'binary_writer.dart';
 import 'logger.dart';
 
 class MessagePacker {
-  MTProtoState _state;
-  List<dynamic> _queue;
-  Logger _log;
+  MTProtoState? _state;
+  List<dynamic>? _queue;
+  Logger? _log;
   Completer<bool> _ready = new Completer<bool>();
 
-  MessagePacker(MTProtoState state, Logger logger) {
+  MessagePacker(MTProtoState? state, Logger? logger) {
     this._state = state;
     this._queue = [];
     this._ready = new Completer<bool>();
     this._log = logger;
   }
 
-  List<dynamic> values() {
+  List<dynamic>? values() {
     return this._queue;
   }
 
   void append(state) {
-    this._queue.add(state);
+    this._queue!.add(state);
     if (!this._ready.isCompleted) {
       this._ready.complete(true);
     }
@@ -33,7 +33,7 @@ class MessagePacker {
 
   void extend(states) {
     for (final state in states) {
-      this._queue.add(state);
+      this._queue!.add(state);
     }
     if (!this._ready.isCompleted) {
       this._ready.complete(true);
@@ -41,44 +41,48 @@ class MessagePacker {
   }
 
   get() async {
-    if (this._queue.length == 0) {
+    if (this._queue!.length == 0) {
       this._ready = new Completer<bool>();
       await this._ready.future;
     }
-    if (this._queue.length > 0 && this._queue[this._queue.length - 1] == false) {
+    if (this._queue!.length > 0 &&
+        this._queue![this._queue!.length - 1] == false) {
       this._queue = [];
       return;
     }
     var data;
-    BinaryWriter buffer = new BinaryWriter(new List<int>());
+    BinaryWriter buffer = new BinaryWriter(<int>[]);
 
     final batch = [];
     var size = 0;
 
-    while (this._queue.length > 0 && batch.length <= MessageContainer.MAXIMUM_LENGTH) {
-      final state = this._queue.removeAt(0);
+    while (this._queue!.length > 0 &&
+        batch.length <= MessageContainer.MAXIMUM_LENGTH) {
+      final state = this._queue!.removeAt(0);
 
-      size += state.data.length + TLMessage.SIZE_OVERHEAD;
+      size += (state.data.length as int) + TLMessage.SIZE_OVERHEAD;
       if (size <= MessageContainer.MAXIMUM_SIZE) {
         var afterId;
         if (state.after != null) {
           afterId = state.after.msgId;
         }
-        state.msgId = await this._state.writeDataAsMessage(
+        state.msgId = await this._state!.writeDataAsMessage(
               buffer,
               state.data,
               state.request.classType == 'request',
               afterId,
             );
-        this._log.debug('Assigned msgId = ${state.msgId} to ${state.request.runtimeType}');
+        this._log!.debug(
+            'Assigned msgId = ${state.msgId} to ${state.request.runtimeType}');
         batch.add(state);
         continue;
       }
       if (batch.length > 0) {
-        this._queue.insert(0, state);
+        this._queue!.insert(0, state);
         break;
       }
-      this._log.warn('Message payload for ${state.request.runtimeType} is too long ${state.data.length} and cannot be sent');
+      this._log!.warn(
+          'Message payload for ${state.request.runtimeType} is too long ${state.data.length} and cannot be sent');
       state.promise.reject('Request Payload is too big');
       size = 0;
       continue;
@@ -87,13 +91,14 @@ class MessagePacker {
       return null;
     }
     if (batch.length > 1) {
-      final b = [readBufferFromBigInt(MessageContainer.CONSTRUCTOR_ID, 4), readBufferFromBigInt(batch.length, 4)]
-          .expand((element) => element)
-          .toList();
+      final b = [
+        readBufferFromBigInt(MessageContainer.CONSTRUCTOR_ID, 4),
+        readBufferFromBigInt(batch.length, 4)
+      ].expand((element) => element).toList();
 
       data = [b, buffer.getValue()].expand((element) => element).toList();
-      buffer = new BinaryWriter(new List());
-      final containerId = await this._state.writeDataAsMessage(
+      buffer = new BinaryWriter([]);
+      final containerId = await this._state!.writeDataAsMessage(
             buffer,
             data,
             false,

@@ -16,12 +16,13 @@ class ReadCancelledError implements Exception {
  * when trying to read a TLObject with an invalid constructor code.
  */
 class TypeNotFoundError implements Exception {
-  int invalidConstructorId;
-  int remaining;
+  int? invalidConstructorId;
+  int? remaining;
 
   TypeNotFoundError({this.invalidConstructorId, this.remaining});
 
-  String toString() => '''Could not find a matching Constructor ID for the TLObject that was supposed to be
+  String toString() =>
+      '''Could not find a matching Constructor ID for the TLObject that was supposed to be
     read with ID ${invalidConstructorId}. Most likely, a TLObject was trying to be read when
     it should not be read. Remaining bytes: ${remaining}''';
 }
@@ -31,12 +32,13 @@ class TypeNotFoundError implements Exception {
  * packet doesn't match the expected checksum.
  */
 class InvalidChecksumError implements Exception {
-  int checksum;
-  int validChecksum;
+  int? checksum;
+  int? validChecksum;
 
   InvalidChecksumError({this.checksum, this.validChecksum});
 
-  String toString() => '''Invalid checksum (${checksum} when ${validChecksum} was expected).This
+  String toString() =>
+      '''Invalid checksum (${checksum} when ${validChecksum} was expected).This
     packet should be skipped''';
 }
 
@@ -45,12 +47,12 @@ class InvalidChecksumError implements Exception {
  * For instance, 404 means "forgotten/broken authorization key", while
  */
 class InvalidBufferError implements Exception {
-  List<int> payload;
+  List<int>? payload;
 
   InvalidBufferError({this.payload});
 
   String toString() {
-    if (payload.length == 4) {
+    if (payload!.length == 4) {
       return '''Invalid response buffer (HTTP code ${payload})''';
     } else {
       return '''Invalid response buffer (too short ${payload})''';
@@ -88,23 +90,28 @@ class BadMessageError implements Exception {
         'original message had waited too long on the client to be transmitted).',
     17: 'msg_id too high (similar to the previous case, the client time has to be ' +
         'synchronized, and the message re-sent with the correct msg_id).',
-    18: 'Incorrect two lower order msg_id bits (the server expects client message msg_id ' + 'to be divisible by 4).',
-    19: 'Container msg_id is the same as msg_id of a previously received message ' + '(this must never happen).',
-    20: 'Message too old, and it cannot be verified whether the server has received a ' + 'message with this msg_id or not.',
+    18: 'Incorrect two lower order msg_id bits (the server expects client message msg_id ' +
+        'to be divisible by 4).',
+    19: 'Container msg_id is the same as msg_id of a previously received message ' +
+        '(this must never happen).',
+    20: 'Message too old, and it cannot be verified whether the server has received a ' +
+        'message with this msg_id or not.',
     32: 'msg_seqno too low (the server has already received a message with a lower ' +
         'msg_id but with either a higher or an equal and odd seqno).',
-    33: 'msg_seqno too high (similarly, there is a message with a higher msg_id but with ' + 'either a lower or an equal and odd seqno).',
+    33: 'msg_seqno too high (similarly, there is a message with a higher msg_id but with ' +
+        'either a lower or an equal and odd seqno).',
     34: 'An even msg_seqno expected (irrelevant message), but odd received.',
     35: 'Odd msg_seqno expected (relevant message), but even received.',
     48: 'Incorrect server salt (in this case, the bad_server_salt response is received with ' +
         'the correct salt, and the message is to be re-sent with it).',
     64: 'Invalid container.',
   };
-  int code;
+  int? code;
   var request;
-  BadMessageError(this.request,this.code);
+  BadMessageError(this.request, this.code);
 
   String toString() {
-    return (this.ErrorMessages[code] ?? '''Unknown error code (this should not happen): ${code}.''');
+    return (this.ErrorMessages[code!] ??
+        '''Unknown error code (this should not happen): ${code}.''');
   }
 }

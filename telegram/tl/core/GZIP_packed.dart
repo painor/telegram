@@ -1,4 +1,3 @@
-
 import 'dart:io';
 
 import '../../extensions/binary_reader.dart';
@@ -7,12 +6,12 @@ import '../../utils.dart';
 class GZIPPacked {
   static const CONSTRUCTOR_ID = 0x3072cfa1;
   static const classType = 'constructor';
-  List<int> data;
+  List<int>? data;
   GZIPPacked(data) {
     this.data = data;
   }
 
-  static List<int> gzipIfSmaller(contentRelated, data) {
+  static List<int>? gzipIfSmaller(contentRelated, data) {
     if (contentRelated && data.length > 512) {
       final gzipped = new GZIPPacked(data).toBytes();
       if (gzipped.length < data.length) {
@@ -30,18 +29,17 @@ class GZIPPacked {
 
   static List<int> ungzip(input) {
     return new GZipCodec().decode(input);
-
   }
 
   toBytes() {
     final g = readBufferFromBigInt(GZIPPacked.CONSTRUCTOR_ID, 4);
-    return  g + serializeBytes(GZIPPacked.gzip(this.data));
+    return g + serializeBytes(GZIPPacked.gzip(this.data));
   }
 
-  static  read(BinaryReader reader) async {
+  static read(BinaryReader reader) async {
     final constructor = reader.readInt(signed: false);
     if (constructor != GZIPPacked.CONSTRUCTOR_ID) {
-      throw('not equal');
+      throw ('not equal');
     }
     return await GZIPPacked.gzip(reader.tgReadBytes());
   }
@@ -50,5 +48,3 @@ class GZIPPacked {
     return new GZIPPacked(GZIPPacked.ungzip(reader.tgReadBytes()));
   }
 }
-
-

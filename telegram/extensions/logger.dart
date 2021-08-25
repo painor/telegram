@@ -1,4 +1,4 @@
-var _level = null;
+dynamic _level = null;
 
 class Logger {
   static const levels = ['error', 'warn', 'info', 'debug'];
@@ -12,8 +12,8 @@ class Logger {
   };
   final String messageFormat = '[%t] [%l] - [%m]';
 
-  Logger({ String level: 'debug'}) {
-    if (_level==null) {
+  Logger({String level: 'debug'}) {
+    if (_level == null) {
       _level = 'debug';
     }
   }
@@ -72,18 +72,17 @@ class Logger {
    * @param message {string}
    * @param color {string}
    */
-  void _log(String level,String message,String color) {
-    if (_level==null) {
+  void _log(String level, String message, String? color) {
+    if (_level == null) {
       return;
     }
     if (this.canSend(level)) {
-      print(color + this.format(message, level) + this.colors['end']);
+      print(color! + this.format(message, level) + this.colors['end']!);
     }
   }
 }
 
-
-void main(){
+void main() {
   var log = new Logger(level: "debug");
   log.error("error");
   log.warn("warn");

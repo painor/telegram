@@ -86,7 +86,7 @@ loadFromTlSchemas() {
 // {name: DestroySession, constructorId: 3880853798, argsConfig: {sessionId: {isVector: false, isFlag: false, skipConstructorId: true,
 //flagIndex: -1, flagIndicator: false, type: long, useVectorId: null}}, subclassOfId: 2936858557, result:
 //DestroySessionRes, isFunction: true, namespace: null}
-String getType(String tgType, bool isVector) {
+String getType(String? tgType, bool isVector) {
   String result = "";
   if (isVector) {
     result += "List<";
@@ -195,9 +195,9 @@ bool writeArgToBytes(ClassWriter writer, arg, Map<dynamic, dynamic> argsConfig, 
     if (arg['type'] == 'true') {
       return false;
     } else if (arg['isVector']) {
-      writer.write("($name==null||$name==false)?new List<int>():[");
+      writer.write("($name==null||$name==false)?List<int>.filled(0, 0, growable: false):[");
     } else {
-      writer.write("($name==null||$name==false)?new List<int>():[");
+      writer.write("($name==null||$name==false)?List<int>.filled(0, 0, growable: false):[");
     }
   }
 
@@ -205,10 +205,10 @@ bool writeArgToBytes(ClassWriter writer, arg, Map<dynamic, dynamic> argsConfig, 
     if (arg['useVectorId']) {
       writer.write("readBufferFromBigInt(0x15c4b51c,4,little:false,signed:false),");
     }
-    writer.write("readBufferFromBigInt($name.length,4,little:true,signed:true),");
+    writer.write("readBufferFromBigInt($name!.length,4,little:true,signed:true),");
 
-    writer.write(("$name.map((x)=>"));
-    final bool oldFlag = arg['isFlag'];
+    writer.write(("$name!.map((x)=>"));
+    final bool? oldFlag = arg['isFlag'];
     arg['isVector'] = false;
     arg['isFlag'] = false;
     writeArgToBytes(writer, arg, argsConfig, name: 'x');
@@ -248,7 +248,7 @@ bool writeArgToBytes(ClassWriter writer, arg, Map<dynamic, dynamic> argsConfig, 
   } else if (arg['type'] == 'string') {
     writer.write('serializeBytes($name)');
   } else if (arg['type'] == 'Bool') {
-    writer.write('[$name ? 0xb5757299 : 0x379779bc]');
+    writer.write('[($name!= null && $name==true) ? 0xb5757299 : 0x379779bc]');
   } else if (arg['type'] == 'true') {
   } else if (arg['type'] == 'bytes') {
     writer.write('serializeBytes($name)');
@@ -274,15 +274,15 @@ bool writeArgToBytes(ClassWriter writer, arg, Map<dynamic, dynamic> argsConfig, 
   return true;
 }
 
-writeGetBytes(ClassWriter writer, String name, argsConfig, constructorId) {
+writeGetBytes(ClassWriter writer, String? name, argsConfig, constructorId) {
   writer.write("\n\tList<int> getBytes(){");
-  final Map<int, List<dynamic>> repeatedArgs = {};
+  final Map<int?, List<dynamic>> repeatedArgs = {};
   argsConfig.forEach((argName, arg) {
     if (arg['isFlag']) {
       if (!repeatedArgs.containsKey([arg['flagIndex']])) {
         repeatedArgs[arg['flagIndex']] = [];
       }
-      repeatedArgs[arg['flagIndex']].add(arg);
+      repeatedArgs[arg['flagIndex']]!.add(arg);
     }
   });
   writer.write("return [readBufferFromBigInt(" + constructorId.toString() + ",4),");
@@ -308,8 +308,8 @@ createClasses(classesType, params) {
     var append = "\n\n";
     //Creating files
     if (!file.existsSync()) {
-      // append = "part of ${classesType == "requests" ? "request" : "constructor"};\n";
-      append = "import '../../utils.dart';\n";
+      append = "//part of ${classesType == "requests" ? "request" : "constructor"};\n";
+      append += "import '../../utils.dart';\n";
       append += "import '../../extensions/binary_reader.dart';\n\n";
       file.createSync(recursive: true);
     }
@@ -330,7 +330,11 @@ createClasses(classesType, params) {
         return;
       }
       filtered.add("this.$key");
-      writer.write("""\t${getType(value['type'], value['isVector'])} $key;\n""");
+      String type = getType(value['type'], value['isVector']);
+      if (type!="var" && type !="dynamic"){
+        type+="?";
+      }
+      writer.write("""\t${type} $key;\n""");
     });
     //Constructor
     argsConfig.forEach((key, value) {});
@@ -344,7 +348,7 @@ createClasses(classesType, params) {
   }
 }
 
-void writeReadResults(ClassWriter writer, String name, Map<String, dynamic> argsConfig, classType, result) {
+void writeReadResults(ClassWriter writer, String? name, Map<String, dynamic> argsConfig, classType, result) {
   if (classType != "requests") {
     return;
   }
@@ -356,7 +360,7 @@ void writeReadResults(ClassWriter writer, String name, Map<String, dynamic> args
     writer.write("return reader.tgReadObject();\n\t}");
     return;
   }
-  final type = m.group(1);
+  final type = m.group(1)!;
   writer.write("\n\tList<${type=="int"?"int":"BigInt"}> readResult(BinaryReader reader) {");
   writer.write("\n\t");
 
@@ -365,7 +369,8 @@ void writeReadResults(ClassWriter writer, String name, Map<String, dynamic> args
   writer.write("\nfinal List<${type=="int"?"int":"BigInt"}> result = [];");
   writer.write("\n for (int i=0;i<range;i++){\n\t");
   writer.write("result.add(reader.read${type.substring(0, 1).toUpperCase()}${type.substring(1, type.length)}());");
-  writer.write("}\n\t}");
+  writer.write("}\n"
+      "return result;\t}");
 }
 
 getArgFromReader(ClassWriter writer, arg, argName, {end: true}) {

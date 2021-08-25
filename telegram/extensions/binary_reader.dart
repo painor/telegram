@@ -7,10 +7,10 @@ import '../utils.dart';
 import 'dart:mirrors';
 
 class BinaryReader {
-  final List<int> stream;
+  final List<int>? stream;
   int offset = 0;
 
-  BinaryReader(List<int> this.stream);
+  BinaryReader(List<int>? this.stream);
 
   // region Reading
 
@@ -19,7 +19,7 @@ class BinaryReader {
   /**
    * Reads a single byte value.
    */
-  int readByte() {
+  int? readByte() {
     return this.read(length: 1)[0];
   }
 
@@ -28,7 +28,9 @@ class BinaryReader {
    * @param signed {Boolean}
    */
   int readInt({bool signed: true}) {
-    final res = readBigIntFromBuffer(this.stream.sublist(this.offset, this.offset + 4), signed: signed);
+    final res = readBigIntFromBuffer(
+        this.stream!.sublist(this.offset, this.offset + 4),
+        signed: signed);
     this.offset += 4;
     return res.toInt();
   }
@@ -58,10 +60,11 @@ class BinaryReader {
    */
   List<int> read({length: -1}) {
     if (length == -1) {
-      length = this.stream.length - this.offset;
+      length = this.stream!.length - this.offset;
     }
-    final result = this.stream.sublist(this.offset, this.offset + length);
-    this.offset += length;
+    final result =
+        this.stream!.sublist(this.offset, this.offset + length as int?);
+    this.offset += length as int;
     if (result.length != length) {
       throw ("No more data left to read (need ${length}, got ${result.length}: ${result});");
     }
@@ -72,7 +75,7 @@ class BinaryReader {
    * Gets the byte array representing the current buffer as a whole.
    * @returns {Buffer}
    */
-  List<int> getBuffer() {
+  List<int>? getBuffer() {
     return this.stream;
   }
 
@@ -89,7 +92,8 @@ class BinaryReader {
     var padding;
     var length;
     if (firstByte == 254) {
-      length = this.readByte() | (this.readByte() << 8) | (this.readByte() << 16);
+      length =
+          this.readByte()! | (this.readByte()! << 8) | (this.readByte()! << 16);
       padding = length % 4;
     } else {
       length = firstByte;
@@ -110,7 +114,7 @@ class BinaryReader {
    * @returns {string}
    */
   String tgReadString() {
-    return utf8.decode(this.tgReadBytes());
+    return utf8.decode(this.tgReadBytes() as List<int>);
   }
 
   /**
@@ -147,7 +151,9 @@ class BinaryReader {
    */
   readDouble() {
     // was this a bug ? it should have been <d
-    return ByteData.sublistView(Uint8List.fromList(this.read(length: 8))).getFloat64(0, Endian.little);
+    return ByteData.sublistView(
+            Uint8List.fromList(this.read(length: 8) as List<int>))
+        .getFloat64(0, Endian.little);
   }
 
   /**
@@ -185,9 +191,8 @@ class BinaryReader {
         // If there was still no luck, give up
         this.seek(-4); // Go back
         final pos = this.tellPosition();
-        final error = new Error();
         this.setPosition(pos);
-        throw error;
+        throw ("Object with ID ${constructorId} not found!");
       }
     }
     var c = reflectClass(clazz);
@@ -216,7 +221,7 @@ class BinaryReader {
    * Closes the reader.
    */
   void close() {
-    this.stream.clear();
+    this.stream!.clear();
   }
 
   // region Position related
@@ -243,7 +248,7 @@ class BinaryReader {
    * @param offset
    */
   void seek(offset) {
-    this.offset += offset;
+    this.offset += offset as int;
   }
 
 // endregion
